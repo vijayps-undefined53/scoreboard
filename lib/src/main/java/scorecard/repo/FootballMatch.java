@@ -18,6 +18,11 @@ public class FootballMatch
         });
     }
 
+    @Override
+    public void updateScore(Teams teams, Object score, Match match) {
+        scoreStrategy.updateScore(teams, score, this);
+    }
+
     public Teams getHomeTeam() {
         return homeTeam;
     }

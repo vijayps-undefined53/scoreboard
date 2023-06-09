@@ -10,4 +10,9 @@ public class RugbyMatch
     public RugbyMatch(ScoreBoard scoreBoard, LinkedHashSet<Teams> teams) {
         super(scoreBoard, teams);
     }
+
+    @Override
+    public void updateScore(Teams teams, Object score, Match match) {
+        
+    }
 }

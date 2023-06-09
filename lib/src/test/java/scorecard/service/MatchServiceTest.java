@@ -7,6 +7,7 @@ import scorecard.Factory.MatchFactory;
 import scorecard.ScoreBoard;
 import scorecard.repo.FootballMatch;
 import scorecard.repo.Match;
+import scorecard.repo.Sequence;
 import scorecard.repo.Teams;
 import scorecard.service.impl.MatchServiceImpl;
 import scorecard.service.impl.TeamsServiceImpl;
@@ -21,14 +22,17 @@ import static org.mockito.Mockito.doReturn;
 import static scorecard.Constants.*;
 
 public class MatchServiceTest {
-    private final TeamsService teamsService = TeamsServiceImpl.getInstance();
     @Spy
     private final ScoreBoard scoreBoard = new ScoreBoard(FOOTBALL);
+    @Mock
+    TeamsService teamsService = TeamsServiceImpl.getInstance();
     @InjectMocks
     MatchServiceImpl matchService;
 
     @Mock
     MatchFactory matchfactory;
+    Teams mexico = new Teams(Sequence.getSequence(), MEXICO);
+    Teams canada = new Teams(Sequence.getSequence(), CANADA);
 
     @BeforeEach
     public void initMocks() {
@@ -43,8 +47,7 @@ public class MatchServiceTest {
 
     @Test
     void When_CreateMatch_Invoked_Should_Create_Match_Instance_Based_On_Game() {
-        Teams mexico = teamsService.createTeams(MEXICO);
-        Teams canada = teamsService.createTeams(CANADA);
+
         mockMatch(MEXICO, CANADA, mexico, canada);
         LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
 
@@ -77,6 +80,12 @@ public class MatchServiceTest {
                 matchfactory).createMatch(argThat(gameMatcher), argThat(scoreBoardArgumentMatcher),
                                           argThat(teamNameMatcher)
                                          );
+        doReturn(mexico).when(
+                teamsService).createTeams(argThat(teamName -> MEXICO.equals(teamName))
+                                         );
+        doReturn(canada).when(
+                teamsService).createTeams(argThat(teamName -> CANADA.equals(teamName))
+                                         );
         return footballMatch;
     }
 
@@ -85,6 +94,28 @@ public class MatchServiceTest {
         LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
         assertThrows(RuntimeException.class, () -> matchService.createMatch("TENNIS", scoreBoard, teamnames));
 
+    }
+
+    @Test
+    void When_UpdateScore_Invoked_Should_Update_Score_Of_The_Match() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
+
+        Match match = matchService.createMatch(FOOTBALL, scoreBoard, teamNames);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+        assertNotNull(match.getScore());
+        assertNotNull(match.getScore().get(mexico));
+        assertNotNull(match.getScore().get(canada));
+        assertEquals(match.getScore().get(canada), 0);
+        assertEquals(match.getScore().get(mexico), 0);
+        matchService.updateScore(mexico, 0, match);
+        matchService.updateScore(canada, 5, match);
+        assertNotNull(match.getScore());
+        assertNotNull(match.getScore().get(mexico));
+        assertNotNull(match.getScore().get(canada));
+        assertEquals(match.getScore().get(canada), 5);
+        assertEquals(match.getScore().get(mexico), 0);
     }
 
 }

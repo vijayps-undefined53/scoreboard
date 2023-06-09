@@ -55,7 +55,8 @@ public abstract class Match {
     public void setScore(Map<Teams, Object> score) {
         this.score = score;
     }
-//    abstract Map<String, Integer> getScore();
+
+    public abstract void updateScore(Teams teams, Object score, Match match);
 //
 //    abstract Teams getWinner();
 

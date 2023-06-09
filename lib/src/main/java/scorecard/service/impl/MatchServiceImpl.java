@@ -2,12 +2,12 @@ package scorecard.service.impl;
 
 import scorecard.Factory.MatchFactory;
 import scorecard.ScoreBoard;
-import scorecard.controller.TeamsController;
 import scorecard.repo.FootballMatch;
 import scorecard.repo.Match;
 import scorecard.repo.RugbyMatch;
 import scorecard.repo.Teams;
 import scorecard.service.MatchService;
+import scorecard.service.TeamsService;
 
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -20,10 +20,10 @@ import static scorecard.Constants.RUGBY;
 public class MatchServiceImpl
         implements MatchService {
     private static final MatchService matchService = new MatchServiceImpl();
-    final TeamsController teamsController;
+    TeamsService teamsService;
 
     private MatchServiceImpl() {
-        this.teamsController = TeamsController.getInstance();
+        this.teamsService = TeamsServiceImpl.getInstance();
     }
 
     public static MatchService getInstance() {
@@ -39,8 +39,8 @@ public class MatchServiceImpl
         }
         if (FOOTBALL.equals(game)) {
             List<String> listOfTeamNames = teams.stream().collect(Collectors.toList());
-            Teams homeTeam = teamsController.createTeams(listOfTeamNames.get(0));
-            Teams awayTeam = teamsController.createTeams(listOfTeamNames.get(1));
+            Teams homeTeam = teamsService.createTeams(listOfTeamNames.get(0));
+            Teams awayTeam = teamsService.createTeams(listOfTeamNames.get(1));
             MatchFactory matchFactory = new MatchFactory();
             Match match =
                     matchFactory.createMatch(game, scoreBoard,
@@ -58,7 +58,7 @@ public class MatchServiceImpl
         if (RUGBY.equals(game)) {
             List<String> listOfTeamNames = teams.stream().collect(Collectors.toList());
             Set<Teams> teamSet =
-                    listOfTeamNames.stream().map(s -> teamsController.createTeams(s)).collect(
+                    listOfTeamNames.stream().map(s -> teamsService.createTeams(s)).collect(
                             Collectors.toSet());
             MatchFactory matchFactory = new MatchFactory();
             Match match =
@@ -74,5 +74,11 @@ public class MatchServiceImpl
 
         }
         throw new RuntimeException("Unsupported Game Type");
+    }
+
+    @Override
+    public Match updateScore(Teams team, Object score, Match match) {
+        match.updateScore(team, score, match);
+        return match;
     }
 }
