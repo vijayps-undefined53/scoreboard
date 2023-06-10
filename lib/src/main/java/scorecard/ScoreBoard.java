@@ -11,8 +11,7 @@ import scorecard.service.impl.ScoreBoardService;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static scorecard.Constants.VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH;
-import static scorecard.Constants.VALID_TEAM_NAME_EXPECTED;
+import static scorecard.Constants.*;
 
 public class ScoreBoard {
     private final Set<Match> matches = new HashSet<>();
@@ -25,13 +24,7 @@ public class ScoreBoard {
     }
 
     public Match createMatch(LinkedHashSet<String> teams) {
-        if (teams == null || teams.isEmpty() || teams.stream().anyMatch(String::isBlank)) {
-            throw new RuntimeException(VALID_TEAM_NAME_EXPECTED);
-        }
-        Map<String, Teams> teamInMatch = findTeamsInScoreBoardBasedOnName(teams);
-        if (teamInMatch != null && !teamInMatch.isEmpty()) {
-            throw new RuntimeException("A match is already going one or both of team names provided");
-        }
+        validationsCreatingMatch(teams);
         Match match = scoreBoardService.createMatch(this.game, teams, this);
         // adding it to the scoreboard
         boolean duplicateMatchNotFound = this.matches.add(match);
@@ -40,6 +33,16 @@ public class ScoreBoard {
                                                "id");
         }
         return match;
+    }
+
+    private void validationsCreatingMatch(LinkedHashSet<String> teams) {
+        if (teams == null || teams.isEmpty() || teams.stream().anyMatch(String::isBlank)) {
+            throw new RuntimeException(VALID_TEAM_NAME_EXPECTED);
+        }
+        Map<String, Teams> teamInMatch = findTeamsInScoreBoardBasedOnName(teams);
+        if (teamInMatch != null && !teamInMatch.isEmpty()) {
+            throw new RuntimeException("A match is already going one or both of team names provided");
+        }
     }
 
     private Map<String, Teams> findTeamsInScoreBoardBasedOnName(LinkedHashSet<String> teams) {
@@ -81,11 +84,36 @@ public class ScoreBoard {
         return match;
     }
 
-    public Match createFootballMatch(String mexico, String canada) {
-        return null;
+    // This is a convenience method for football game, Scoreboard should have game type football and this method can
+    // only be used to create football match, use generic createMatch method for other games
+    public Match createFootballMatch(String homeTeam, String awayTeam) {
+        if (!FOOTBALL.equals(this.game)) {
+            throw new RuntimeException("Scoreboard should have game type football, this method can only be used to " +
+                                               "create football match, use generic createMatch for other games");
+        }
+        LinkedHashSet<String> teams = new LinkedHashSet<>(Set.of(homeTeam, awayTeam));
+        validationsCreatingMatch(teams);
+        return scoreBoardService.createMatch(FOOTBALL, teams, this);
     }
 
-    public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, FootballMatch match) {
-        //to do
+    public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, FootballMatch footballMatch) {
+        if (!FOOTBALL.equals(this.game)) {
+            throw new RuntimeException("Scoreboard should have game type football, this method can only be used to " +
+                                               "update football match score, use generic updateScore for other games");
+        }
+        if (!this.matches.contains(footballMatch)) {
+            throw new RuntimeException("Match not associated to this score board");
+        }
+        if (footballMatch.getHomeTeam() == null || footballMatch.getHomeTeam().getName() == null ||
+                footballMatch.getAwayTeam() == null || footballMatch.getAwayTeam().getName() == null) {
+            throw new RuntimeException("Home Team and Away Team cannot be null for a football match");
+        }
+
+        footballMatch = (FootballMatch) scoreBoardService.updateScore(footballMatch.getHomeTeam(), homeTeamScore,
+                                                                      footballMatch);
+        footballMatch = (FootballMatch) scoreBoardService.updateScore(footballMatch.getAwayTeam(), awayTeamScore,
+                                                                      footballMatch);
+
+        return footballMatch;
     }
 }

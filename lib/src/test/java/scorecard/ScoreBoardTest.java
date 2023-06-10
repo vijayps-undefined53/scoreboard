@@ -99,36 +99,120 @@ class ScoreBoardTest {
     //Add a convenience method to update Football score just passing in home team score ,away team score and the
     // match object
     @Test
-    void When_UpdateScore_Invoked_With_HomeTeam_And_AwayTeam_Score_Should_update_footballmatch_score() {
+    void When_UpdateScore_Invoked_With_HomeTeam_And_AwayTeam_Score_Should_Throw_Validation_Error_If_Home_Or_Away_Team_Is_Null()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
-        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
-        footballMatch.setHomeTeam(mexico);
-        footballMatch.setAwayTeam(canada);
-        Match matchMock = new FootballMatch(footballScoreBoard, teams);
+        FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
+        addMatchToScoreBoard(footballMatch, footballScoreBoard);
 
-        FootballMatch footballMatch1 = new FootballMatch(footballScoreBoard, teams);
-
+        FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
+        matchMock.setHomeTeam(mexico);
+        matchMock.setAwayTeam(canada);
+        matchMock.updateScore(mexico, 2, matchMock);
+        matchMock.updateScore(canada, 10, matchMock);
 
         doReturn(matchMock).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
                                                                         Set.of(mexico.getName(),
                                                                                canada.getName())).contains(team.getName())),
                                                                 argThat(score -> {
                                                                     if (score instanceof Integer &&
-                                                                            (Integer) score == 0)
+                                                                            (Integer) score == 2)
                                                                         return true;
                                                                     assert score instanceof Integer;
-                                                                    return (Integer) score == 5;
+                                                                    return (Integer) score == 10;
                                                                 }),
                                                                 argThat(matchArg -> matchArg instanceof FootballMatch));
-        Map<String, Object> scoreUpdate = new HashMap<>();
-        scoreUpdate.put(MEXICO, 1);
-        scoreUpdate.put(CANADA, 1);
 
-        Match match = footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch1);
+        assertThrows(RuntimeException.class, () -> footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch));
+    }
+
+    private void addMatchToScoreBoard(Match matchMock, ScoreBoard scoreBoard)
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+        Field matches
+                = ScoreBoard.class.getDeclaredField("matches");
+
+        // Set the accessibility as true
+        matches.setAccessible(true);
+
+        Set matchSet = (HashSet) matches.get(scoreBoard);
+        matchSet.add(matchMock);
+    }
+
+    //Add a convenience method to update Football score just passing in home team score ,away team score and the
+    // match object
+    @Test
+    void When_UpdateScore_Invoked_With_HomeTeam_And_AwayTeam_Score_Should_Throw_Validation_Error_If_Game_Of_ScoreBord_Not_FootBall()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        addMatchToScoreBoard(footballMatch, footballScoreBoard);
+
+        FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
+        matchMock.setHomeTeam(mexico);
+        matchMock.setAwayTeam(canada);
+        matchMock.updateScore(mexico, 2, matchMock);
+        matchMock.updateScore(canada, 10, matchMock);
+
+        doReturn(matchMock).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                        Set.of(mexico.getName(),
+                                                                               canada.getName())).contains(team.getName())),
+                                                                argThat(score -> {
+                                                                    if (score instanceof Integer &&
+                                                                            (Integer) score == 2)
+                                                                        return true;
+                                                                    assert score instanceof Integer;
+                                                                    return (Integer) score == 10;
+                                                                }),
+                                                                argThat(matchArg -> matchArg instanceof FootballMatch));
+
+        assertThrows(RuntimeException.class, () -> rugbyScoreBoard.updateFootballMatchScore(2, 10, footballMatch));
+    }
+
+    @Test
+    void When_UpdateScore_Invoked_With_HomeTeam_And_AwayTeam_Score_Should_update_footballmatch_score()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        addMatchToScoreBoard(footballMatch, footballScoreBoard);
+
+        FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
+        matchMock.setHomeTeam(mexico);
+        matchMock.setAwayTeam(canada);
+        matchMock.updateScore(mexico, 2, matchMock);
+        matchMock.updateScore(canada, 10, matchMock);
+
+        doReturn(matchMock).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                        Set.of(mexico.getName(),
+                                                                               canada.getName())).contains(team.getName())),
+                                                                argThat(score -> {
+                                                                    if (score instanceof Integer &&
+                                                                            (Integer) score == 2)
+                                                                        return true;
+                                                                    assert score instanceof Integer;
+                                                                    return (Integer) score == 10;
+                                                                }),
+                                                                argThat(matchArg -> matchArg instanceof FootballMatch));
+
+        Match match = footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch);
         assertInstanceOf(Match.class, match);
         assertInstanceOf(FootballMatch.class, match);
-        assertEquals(match.getScore().get(mexico), 0);
-        assertEquals(match.getScore().get(canada), 0);
+        assertEquals(match.getScore().get(mexico), 2);
+        assertEquals(match.getScore().get(canada), 10);
     }
 
     @Test
@@ -323,7 +407,6 @@ class ScoreBoardTest {
 
     }
 
-
     @Test
     void When_UpdateScore_Invoked_With_A_Team_Not_In_ScoreBoard_Should_Throw_Exception() {
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
@@ -387,14 +470,7 @@ class ScoreBoardTest {
         Map<String, Object> scoreUpdate = new HashMap<>();
         scoreUpdate.put(MEXICO, 0);
         scoreUpdate.put(CANADA, 5);
-        Field matches
-                = ScoreBoard.class.getDeclaredField("matches");
-
-        // Set the accessibility as true
-        matches.setAccessible(true);
-
-        Set matchSet = (HashSet) matches.get(scoreBoard);
-        matchSet.add(matchMock);
+        addMatchToScoreBoard(matchMock, scoreBoard);
         Match matchResponse = scoreBoard.updateScore(scoreUpdate, matchMock);
 
         assertNotNull(matchResponse.getScore());
