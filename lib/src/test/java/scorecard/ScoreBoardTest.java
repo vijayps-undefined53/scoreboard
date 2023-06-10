@@ -22,7 +22,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static scorecard.Constants.*;
@@ -61,11 +61,11 @@ class ScoreBoardTest {
         assertInstanceOf(FootballMatch.class, match);
 
         // Add Another type of game to another score board
-        ArgumentMatcher<String> rugbyMatcher = gamename -> RUGBY.equals(gamename);
+        ArgumentMatcher<String> rugbyMatcher = RUGBY::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
                 teams2 -> teams2 != null && teams2.stream().allMatch(Objects::nonNull);
         ArgumentMatcher<ScoreBoard> scoreCardMatcher2 =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
         Teams spain = teamsService.createTeams(SPAIN);
         Teams brazil = teamsService.createTeams(BRAZIL);
 
@@ -83,13 +83,13 @@ class ScoreBoardTest {
     }
 
     private Match mockMatch(String team1, String team2, Teams teams1, Teams teams2) {
-        ArgumentMatcher<String> gameMatcher = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> team1.equals(t))
-                        && teams.stream().anyMatch(t -> team2.equals(t));
+                        (teams.stream().anyMatch(team1::equals)
+                                || teams.stream().anyMatch(team2::equals));
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
 
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teams1, teams2));
@@ -111,26 +111,26 @@ class ScoreBoardTest {
         Match match = scoreBoard.createMatch(teamnames);
 
 
-        ArgumentMatcher<String> gameMatcher = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> MEXICO.equals(t))
-                        && teams.stream().anyMatch(t -> CANADA.equals(t));
+                        (teams.stream().anyMatch(MEXICO::equals)
+                                || teams.stream().anyMatch(CANADA::equals));
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
         Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
                                                                 argThat(scoreBoardArgumentMatcher));
 
         mockMatch(SPAIN, BRAZIL, spain, brazil);
         teamnames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
         Match match2 = scoreBoard.createMatch(teamnames);
-        ArgumentMatcher<String> gameMatcher2 = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher2 = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> SPAIN.equals(t))
-                        && teams.stream().anyMatch(t -> BRAZIL.equals(t));
+                        teams.stream().anyMatch(SPAIN::equals)
+                        && teams.stream().anyMatch(BRAZIL::equals);
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher2 =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
         Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher2), argThat(teamNameMatcher2),
                                                                 argThat(scoreBoardArgumentMatcher2));
@@ -143,7 +143,7 @@ class ScoreBoardTest {
 
         List<Match> matchListActual = scoreBoard.getMatches();
         assertInstanceOf(List.class, matchListActual);
-        assertTrue(matchListActual != null);
+        assertNotNull(matchListActual);
         assertEquals(matchListActual.size(), 2);
         assertNotNull(matchListActual.get(0).getScore());
         assertNotNull(matchListActual.get(1).getScore());
@@ -173,13 +173,13 @@ class ScoreBoardTest {
         assertInstanceOf(FootballMatch.class, match);
 
         // Add Another type of game to another score board
-        ArgumentMatcher<String> rugbyMatcher = gamename -> RUGBY.equals(gamename);
+        ArgumentMatcher<String> rugbyMatcher = RUGBY::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> SPAIN.equals(t))
-                        && teams.stream().anyMatch(t -> BRAZIL.equals(t));
+                        teams.stream().anyMatch(SPAIN::equals)
+                        && teams.stream().anyMatch(BRAZIL::equals);
         ArgumentMatcher<ScoreBoard> scoreCardMatcher2 =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
         LinkedHashSet<Teams> rugbyTeams = new LinkedHashSet<>(Set.of(spain, brazil));
 
@@ -196,7 +196,7 @@ class ScoreBoardTest {
 
         List<Match> matchListActual = scoreBoard.getMatches();
         assertInstanceOf(List.class, matchListActual);
-        assertTrue(matchListActual != null);
+        assertNotNull(matchListActual);
         assertEquals(matchListActual.size(), 1);
         assertNotNull(matchListActual.get(0).getScore());
 
@@ -241,26 +241,26 @@ class ScoreBoardTest {
         Match match = scoreBoard.createMatch(teamnames);
 
 
-        ArgumentMatcher<String> gameMatcher = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> MEXICO.equals(t))
-                        && teams.stream().anyMatch(t -> CANADA.equals(t));
+                        (teams.stream().anyMatch(MEXICO::equals)
+                                || teams.stream().anyMatch(CANADA::equals));
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
         Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
                                                                 argThat(scoreBoardArgumentMatcher));
 
         mockMatch(SPAIN, BRAZIL, spain, brazil);
         teamnames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
         Match match2 = scoreBoard.createMatch(teamnames);
-        ArgumentMatcher<String> gameMatcher2 = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher2 = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> SPAIN.equals(t))
-                        && teams.stream().anyMatch(t -> BRAZIL.equals(t));
+                        teams.stream().anyMatch(SPAIN::equals)
+                        && teams.stream().anyMatch(BRAZIL::equals);
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher2 =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
         Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher2), argThat(teamNameMatcher2),
                                                                 argThat(scoreBoardArgumentMatcher2));
@@ -273,7 +273,7 @@ class ScoreBoardTest {
 
         List<Match> matchListActual = scoreBoard.getMatches();
         assertInstanceOf(List.class, matchListActual);
-        assertTrue(matchListActual != null);
+        assertNotNull(matchListActual);
         assertEquals(matchListActual.size(), 2);
         assertNotNull(matchListActual.get(0).getScore());
         assertNotNull(matchListActual.get(1).getScore());

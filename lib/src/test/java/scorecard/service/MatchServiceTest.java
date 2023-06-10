@@ -63,37 +63,41 @@ public class MatchServiceTest {
         assertEquals(match.getScore().get(mexico), 0);
     }
 
-    private Match mockMatch(String team1, String team2, Teams teams1, Teams teams2) {
-        ArgumentMatcher<String> gameMatcher = gamename -> FOOTBALL.equals(gamename);
+    private Match mockMatch(String team1, String team2, Teams teamsObj1, Teams teamsObj2) {
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<Teams>> teamNameMatcher =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(t -> team1.equals(t))
-                        && teams.stream().anyMatch(t -> team2.equals(t));
+                teams -> {
+                    if (teams != null && teams.stream().allMatch(Objects::nonNull) &&
+                            teams.stream().anyMatch(teamsObj1::equals)) {
+                        return teams.stream().anyMatch(teamsObj2::equals);
+                    }
+                    return false;
+                };
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
 
-        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teams1, teams2));
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teamsObj1, teamsObj2));
         FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
-        footballMatch.setHomeTeam(teams1);
-        footballMatch.setAwayTeam(teams2);
+        footballMatch.setHomeTeam(teamsObj1);
+        footballMatch.setAwayTeam(teamsObj2);
 
         doReturn(footballMatch).when(
                 matchfactory).createMatch(argThat(gameMatcher), argThat(scoreBoardArgumentMatcher),
                                           argThat(teamNameMatcher)
                                          );
         doReturn(mexico).when(
-                teamsService).createTeams(argThat(teamName -> MEXICO.equals(teamName))
+                teamsService).createTeams(argThat(MEXICO::equals)
                                          );
         doReturn(canada).when(
-                teamsService).createTeams(argThat(teamName -> CANADA.equals(teamName))
+                teamsService).createTeams(argThat(CANADA::equals)
                                          );
 
         doReturn(spain).when(
-                teamsService).createTeams(argThat(teamName -> SPAIN.equals(teamName))
+                teamsService).createTeams(argThat(SPAIN::equals)
                                          );
         doReturn(brazil).when(
-                teamsService).createTeams(argThat(teamName -> BRAZIL.equals(teamName)));
+                teamsService).createTeams(argThat(BRAZIL::equals));
         return footballMatch;
     }
 

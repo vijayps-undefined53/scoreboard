@@ -9,6 +9,7 @@ import scorecard.repo.Teams;
 import scorecard.service.MatchService;
 import scorecard.service.TeamsService;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,8 +39,7 @@ public class MatchServiceImpl
             throw new RuntimeException("Teams or Score card is null");
         }
         if (FOOTBALL.equals(game)) {
-            List<String> listOfTeamNames = teams.stream().collect(Collectors.toList());
-            scoreBoard.getMatches();
+            List<String> listOfTeamNames = new ArrayList<>(teams);
             Teams homeTeam = teamsService.createTeams(listOfTeamNames.get(0));
             Teams awayTeam = teamsService.createTeams(listOfTeamNames.get(1));
             MatchFactory matchFactory = new MatchFactory();
@@ -57,7 +57,7 @@ public class MatchServiceImpl
             }
         }
         if (RUGBY.equals(game)) {
-            List<String> listOfTeamNames = teams.stream().collect(Collectors.toList());
+            List<String> listOfTeamNames = new ArrayList<>(teams);
             Set<Teams> teamSet =
                     listOfTeamNames.stream().map(s -> teamsService.createTeams(s)).collect(
                             Collectors.toSet());
@@ -68,8 +68,7 @@ public class MatchServiceImpl
 
             // Set Game Specific Behavior based on match instance type
             if (match instanceof RugbyMatch) {
-                RugbyMatch rugbyMatch = (RugbyMatch) match;
-                return rugbyMatch;
+                return match;
                 //
             }
 

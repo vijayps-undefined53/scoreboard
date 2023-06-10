@@ -15,9 +15,6 @@ public class ScoreBoard {
     String game;
     ScoreBoardService scoreBoardService;
 
-    {
-    }
-
     public ScoreBoard(String game) {
         this.game = game;
         scoreBoardService = ScoreBoardService.getInstance();
@@ -28,9 +25,9 @@ public class ScoreBoard {
             throw new RuntimeException("Valid teams names expected");
         }
         if (matches != null && !matches.isEmpty()) {
-            for (int i = 0; i < matches.size(); i++) {
-                Set<Teams> teamSet = matches.get(i).getScore().keySet();
-                List<String> teamNames = teamSet.stream().map(teams1 -> teams1.getName()).collect(Collectors.toList());
+            for (Match match : matches) {
+                Set<Teams> teamSet = match.getScore().keySet();
+                List<String> teamNames = teamSet.stream().map(Teams::getName).collect(Collectors.toList());
                 if (teamNames.stream().anyMatch(teams::contains)) {
                     throw new RuntimeException("A match is already going on with the team names provided");
                 }
