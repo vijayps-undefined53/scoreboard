@@ -12,9 +12,7 @@ import scorecard.service.impl.MatchServiceImpl;
 import scorecard.service.impl.ScoreBoardService;
 import scorecard.service.impl.TeamsServiceImpl;
 
-import java.util.LinkedHashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -122,5 +120,43 @@ public class ScoreBoardServiceTest {
         assertThrows(RuntimeException.class,
                      () -> scoreBoardService.createMatch(FOOTBALL, null,
                                                          scoreBoard));
+    }
+
+    @Test
+    void When_UpdateScore_Invoked_Should_Update_Score_Of_A_Match() {
+        Teams mexico = teamsService.createTeams(MEXICO);
+        Teams canada = teamsService.createTeams(CANADA);
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+
+        Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
+
+
+        matchMockUpdate.getScore().put(mexico, 0);
+        matchMockUpdate.getScore().put(canada, 5);
+
+        //Update Score
+
+        doReturn(matchMockUpdate).when(matchService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                         Set.of(mexico.getName(),
+                                                                                canada.getName())).contains(team.getName())),
+                                                                 argThat(score -> {
+                                                                     if (score instanceof Integer &&
+                                                                             (Integer) score == 0) return true;
+                                                                     assert score instanceof Integer;
+                                                                     return (Integer) score == 5;
+                                                                 }),
+                                                                 argThat(matchArg -> matchArg instanceof FootballMatch));
+
+        Map<String, Object> scoreUpdate = new HashMap<>();
+        scoreUpdate.put(MEXICO, 0);
+        scoreUpdate.put(CANADA, 5);
+        scoreBoardService.updateScore(mexico, 0, footballMatch);
+        assertEquals(0, footballMatch.getScore().get(footballMatch.getHomeTeam()));
+        scoreBoardService.updateScore(canada, 5, footballMatch);
+        assertEquals(5, footballMatch.getScore().get(footballMatch.getAwayTeam()));
     }
 }
