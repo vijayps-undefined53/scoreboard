@@ -33,6 +33,8 @@ public class MatchServiceTest {
     MatchFactory matchfactory;
     Teams mexico = new Teams(Sequence.getSequence(), MEXICO);
     Teams canada = new Teams(Sequence.getSequence(), CANADA);
+    Teams spain = new Teams(Sequence.getSequence(), SPAIN);
+    Teams brazil = new Teams(Sequence.getSequence(), BRAZIL);
 
     @BeforeEach
     public void initMocks() {
@@ -86,6 +88,12 @@ public class MatchServiceTest {
         doReturn(canada).when(
                 teamsService).createTeams(argThat(teamName -> CANADA.equals(teamName))
                                          );
+
+        doReturn(spain).when(
+                teamsService).createTeams(argThat(teamName -> SPAIN.equals(teamName))
+                                         );
+        doReturn(brazil).when(
+                teamsService).createTeams(argThat(teamName -> BRAZIL.equals(teamName)));
         return footballMatch;
     }
 
@@ -109,13 +117,32 @@ public class MatchServiceTest {
         assertNotNull(match.getScore().get(canada));
         assertEquals(match.getScore().get(canada), 0);
         assertEquals(match.getScore().get(mexico), 0);
+
+        //Update Score
         matchService.updateScore(mexico, 0, match);
         matchService.updateScore(canada, 5, match);
+
         assertNotNull(match.getScore());
         assertNotNull(match.getScore().get(mexico));
         assertNotNull(match.getScore().get(canada));
-        assertEquals(match.getScore().get(canada), 5);
-        assertEquals(match.getScore().get(mexico), 0);
+        assertEquals(5, match.getScore().get(canada), String.format("Score not updated for %s", canada));
+        assertEquals(0, match.getScore().get(mexico), String.format("Score not updated for %s", mexico));
+
+        mockMatch(SPAIN, BRAZIL, spain, brazil);
+        LinkedHashSet<String> spainAndBrazil = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
+
+        Match match2 = matchService.createMatch(FOOTBALL, scoreBoard, spainAndBrazil);
+
+        //Update Score
+        matchService.updateScore(spain, 10, match2);
+        matchService.updateScore(brazil, 2, match2);
+
+        assertNotNull(match2.getScore());
+        assertNotNull(match2.getScore().get(spain));
+        assertNotNull(match2.getScore().get(brazil));
+        assertEquals(10, match2.getScore().get(spain), String.format("Score not updated for %s", spain));
+        assertEquals(2, match2.getScore().get(brazil), String.format("Score not updated for %s", brazil));
+
     }
 
 }

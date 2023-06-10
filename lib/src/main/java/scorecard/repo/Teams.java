@@ -38,6 +38,11 @@ public class Teams {
         return getId().equals(teams.getId());
     }
 
+    @Override
+    public String toString() {
+        return "Team name = " + name;
+    }
+
     public Integer getId() {
         return id;
     }

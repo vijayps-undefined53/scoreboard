@@ -39,6 +39,7 @@ public class MatchServiceImpl
         }
         if (FOOTBALL.equals(game)) {
             List<String> listOfTeamNames = teams.stream().collect(Collectors.toList());
+            scoreBoard.getMatches();
             Teams homeTeam = teamsService.createTeams(listOfTeamNames.get(0));
             Teams awayTeam = teamsService.createTeams(listOfTeamNames.get(1));
             MatchFactory matchFactory = new MatchFactory();
