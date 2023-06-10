@@ -19,13 +19,30 @@ public class ScoreBoard {
     ScoreBoardService scoreBoardService;
 
     public ScoreBoard(String game) {
-        this.game = game;
+        if (game.equals(FOOTBALL) || game.equals(RUGBY)) {
+            this.game = game;
+            scoreBoardService = ScoreBoardService.getInstance();
+        } else {
+            throw new RuntimeException(
+                    "Pass football or rugby as game type, other games need to have scoring strategy " +
+                            "and match type class extended to be supported");
+        }
+    }
+
+    //Convenience method to use Football game as Scoreboard game without passing game name.
+    public ScoreBoard() {
+        this.game = FOOTBALL;
         scoreBoardService = ScoreBoardService.getInstance();
     }
 
+    // This is a generic createMatch method for all games, this can be used to create match based on game name passed
+    // to ScoreBoard, default game type is football.
     public Match createMatch(LinkedHashSet<String> teams) {
         validationsCreatingMatch(teams);
         Match match = scoreBoardService.createMatch(this.game, teams, this);
+        if (match == null) {
+            throw new RuntimeException("Match cannot be created");
+        }
         // adding it to the scoreboard
         boolean duplicateMatchNotFound = this.matches.add(match);
         if (!duplicateMatchNotFound) {
@@ -93,9 +110,18 @@ public class ScoreBoard {
         }
         LinkedHashSet<String> teams = new LinkedHashSet<>(Set.of(homeTeam, awayTeam));
         validationsCreatingMatch(teams);
-        return scoreBoardService.createMatch(FOOTBALL, teams, this);
+        FootballMatch match = (FootballMatch) scoreBoardService.createMatch(FOOTBALL, teams, this);
+        // adding it to the scoreboard
+        boolean duplicateMatchNotFound = this.matches.add(match);
+        if (!duplicateMatchNotFound) {
+            throw new RuntimeException("Match cannot be added to scoreboard, as a match is already present with same " +
+                                               "id");
+        }
+        return match;
     }
 
+    // This is a convenience method for football game, Scoreboard should have game type football and this method can
+    // only be used to update football score, use generic updateScore method for other games
     public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, FootballMatch footballMatch) {
         if (!FOOTBALL.equals(this.game)) {
             throw new RuntimeException("Scoreboard should have game type football, this method can only be used to " +
@@ -115,5 +141,8 @@ public class ScoreBoard {
                                                                       footballMatch);
 
         return footballMatch;
+    }
+
+    public void finishMatch(Match footballMatch) {
     }
 }

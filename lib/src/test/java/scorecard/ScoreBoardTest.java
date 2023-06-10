@@ -34,6 +34,8 @@ class ScoreBoardTest {
     ScoreBoard rugbyScoreBoard = new ScoreBoard(RUGBY);
     @InjectMocks
     ScoreBoard footballScoreBoard = new ScoreBoard(FOOTBALL);
+    @InjectMocks
+    ScoreBoard defaultGameScoreBoard = new ScoreBoard();
     @Mock
     ScoreBoardService scoreBoardService = ScoreBoardService.getInstance();
     @Mock
@@ -216,6 +218,15 @@ class ScoreBoardTest {
     }
 
     @Test
+    void When_CreateMatch_Invoked_WithOut_Passing_GameType_Should_CreateMatchInstance_Of_Default_Game_Football() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
+        Match match = defaultGameScoreBoard.createMatch(teamnames);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+    }
+
+    @Test
     void When_CreateMatch_Invoked_Should_CreateMatchInstance_Based_On_Game() {
         mockMatch(MEXICO, CANADA, mexico, canada);
         LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
@@ -243,6 +254,21 @@ class ScoreBoardTest {
         Match match2 = rugbyScoreBoard.createMatch(rugbyTeamNames);
         assertInstanceOf(Match.class, match2);
         assertInstanceOf(RugbyMatch.class, match2);
+    }
+
+    @Test
+    void When_CreateMatch_Invoked_WithOut_Passing_GameType_Should_Update_Football_Score_Of_Home_Away_To_Zero() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
+        FootballMatch match = (FootballMatch) defaultGameScoreBoard.createMatch(teamnames);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+        assertEquals(match.getHomeTeam().getName(), MEXICO);
+        assertEquals(match.getAwayTeam().getName(), CANADA);
+
+        assertEquals(match.getScore().get(mexico), 0);
+        assertEquals(match.getScore().get(canada), 0);
     }
 
     @Test
@@ -478,5 +504,44 @@ class ScoreBoardTest {
         assertNotNull(matchResponse.getScore().get(canada));
         assertEquals(5, matchResponse.getScore().get(canada), String.format("Score not updated for %s", canada));
         assertEquals(0, matchResponse.getScore().get(mexico), String.format("Score not updated for %s", mexico));
+    }
+
+    @Test
+    void When_FinishMatch_Invoked_Should_Remove_Match_From_ScoreBoard() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        assertInstanceOf(Match.class, footballMatch);
+        assertInstanceOf(FootballMatch.class, footballMatch);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        footballScoreBoard.finishMatch(footballMatch);
+        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+
+        mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
+        LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
+        RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
+        assertNotNull(rugbyScoreBoardMatch);
+        assertInstanceOf(Match.class, rugbyScoreBoardMatch);
+        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        rugbyScoreBoard.finishMatch(rugbyScoreBoardMatch);
+        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+    }
+
+    private Match mockRugbyMatch(String team1, String team2, Teams teams1, Teams teams2) {
+        ArgumentMatcher<String> gameMatcher = RUGBY::equals;
+        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
+                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
+                        (teams.stream().anyMatch(team1::equals)
+                                || teams.stream().anyMatch(team2::equals));
+        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
+                Objects::nonNull;
+
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teams1, teams2));
+        RugbyMatch rugbyMatch = new RugbyMatch(new ScoreBoard(RUGBY), teams);
+
+        doReturn(rugbyMatch).when(
+                scoreBoardService).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
+                                               argThat(scoreBoardArgumentMatcher));
+        return rugbyMatch;
     }
 }
