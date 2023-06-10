@@ -78,7 +78,6 @@ public class MatchServiceImpl
 
     @Override
     public Match updateScore(Teams team, Object score, Match match) {
-        match.updateScore(team, score, match);
-        return match;
+        return match.updateScore(team, score, match);
     }
 }

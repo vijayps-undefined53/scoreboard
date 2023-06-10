@@ -12,7 +12,8 @@ public class RugbyMatch
     }
 
     @Override
-    public void updateScore(Teams teams, Object score, Match match) {
-        
+    public Match updateScore(Teams teams, Object score, Match match) {
+
+        return match;
     }
 }

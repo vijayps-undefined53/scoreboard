@@ -3,6 +3,7 @@
  */
 package scorecard;
 
+import scorecard.repo.FootballMatch;
 import scorecard.repo.Match;
 import scorecard.repo.Teams;
 import scorecard.service.impl.ScoreBoardService;
@@ -14,8 +15,7 @@ import static scorecard.Constants.VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_N
 import static scorecard.Constants.VALID_TEAM_NAME_EXPECTED;
 
 public class ScoreBoard {
-    Set<Match> matches = new HashSet<>();
-
+    private final Set<Match> matches = new HashSet<>();
     String game;
     ScoreBoardService scoreBoardService;
 
@@ -43,7 +43,7 @@ public class ScoreBoard {
     }
 
     private Map<String, Teams> findTeamsInScoreBoardBasedOnName(LinkedHashSet<String> teams) {
-        if (matches != null && !matches.isEmpty()) {
+        if (!matches.isEmpty()) {
             for (Match match : matches) {
                 Map<String, Teams> teamsList = findTeamsInMatchBasedOnTeamNames(teams, match);
                 if (teamsList != null) return teamsList;
@@ -67,6 +67,9 @@ public class ScoreBoard {
 
     public Match updateScore(Map<String, Object> score,
                              Match match) {
+        if (!this.matches.contains(match)) {
+            throw new RuntimeException("Match not associated to this score board");
+        }
         Map<String, Teams> teamInMatch =
                 findTeamsInMatchBasedOnTeamNames(new LinkedHashSet<>(score.keySet()), match);
         if (teamInMatch == null || !(teamInMatch.size() == score.keySet().size())) {
@@ -76,5 +79,13 @@ public class ScoreBoard {
             match = scoreBoardService.updateScore(teamInMatch.get(entry.getKey()), entry.getValue(), match);
         }
         return match;
+    }
+
+    public Match createFootballMatch(String mexico, String canada) {
+        return null;
+    }
+
+    public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, FootballMatch match) {
+        //to do
     }
 }

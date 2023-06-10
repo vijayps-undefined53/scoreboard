@@ -56,7 +56,7 @@ public abstract class Match {
         this.score = score;
     }
 
-    public abstract void updateScore(Teams teams, Object score, Match match);
+    public abstract Match updateScore(Teams teams, Object score, Match match);
 //
 //    abstract Teams getWinner();
 

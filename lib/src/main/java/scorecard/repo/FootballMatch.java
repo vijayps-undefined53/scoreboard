@@ -13,14 +13,14 @@ public class FootballMatch
     public FootballMatch(ScoreBoard scoreBoard, LinkedHashSet<Teams> teams) {
         super(scoreBoard, teams);
         scoreStrategy = new ScoreStrategy(new FootballScore());
-        teams.stream().forEach(team -> {
-            scoreStrategy.updateScore(team, 0, this);
-        });
+        teams.forEach(team ->
+                              scoreStrategy.updateScore(team, 0, this)
+                     );
     }
 
     @Override
-    public void updateScore(Teams teams, Object score, Match match) {
-        scoreStrategy.updateScore(teams, score, this);
+    public Match updateScore(Teams teams, Object score, Match match) {
+        return scoreStrategy.updateScore(teams, score, this);
     }
 
     public Teams getHomeTeam() {

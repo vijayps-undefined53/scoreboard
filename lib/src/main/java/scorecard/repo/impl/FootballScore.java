@@ -10,17 +10,19 @@ import java.util.Map;
 public class FootballScore
         implements Score {
     @Override
-    public void updateScore(Teams teams, Object score, Match match) {
-        if (!(score instanceof Integer)) {
+    public Match updateScore(Teams teams, Object score, Match match) {
+        if (match == null) {
+            throw new RuntimeException("Match cannot be null, while updating match score");
+        }
+        if (!(score instanceof Integer) || (Integer) score < 0) {
             throw new RuntimeException("Football goal is an absolute integer");
         }
         Map<Teams, Object> footballScore = new HashMap<>();
-        if (match != null && match.getScore() != null) {
-            match.getScore().entrySet().forEach(teamsObjectEntry -> {
-                footballScore.put(teamsObjectEntry.getKey(), teamsObjectEntry.getValue());
-            });
+        if (match.getScore() != null) {
+            footballScore.putAll(match.getScore());
         }
         footballScore.put(teams, score);
         match.setScore(footballScore);
+        return match;
     }
 }

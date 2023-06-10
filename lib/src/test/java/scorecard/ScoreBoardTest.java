@@ -16,6 +16,7 @@ import scorecard.service.TeamsService;
 import scorecard.service.impl.ScoreBoardService;
 import scorecard.service.impl.TeamsServiceImpl;
 
+import java.lang.reflect.Field;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,6 +32,8 @@ class ScoreBoardTest {
     ScoreBoard scoreBoard = new ScoreBoard(FOOTBALL);
     @InjectMocks
     ScoreBoard rugbyScoreBoard = new ScoreBoard(RUGBY);
+    @InjectMocks
+    ScoreBoard footballScoreBoard = new ScoreBoard(FOOTBALL);
     @Mock
     ScoreBoardService scoreBoardService = ScoreBoardService.getInstance();
     @Mock
@@ -47,6 +50,85 @@ class ScoreBoardTest {
     public void initMocks() {
         MockitoAnnotations.initMocks(this);
 
+    }
+
+    //Add a convenience method to create Football match without passing game type , this is in addition to the generic
+    // match creation method which requires game type to passed
+    @Test
+    void When_CreateFootballMatch_Invoked_With_HomeTeam_Name_AwayTeam_Name_Should_Create_A_Match_Instance_Of_Game_Type_Football() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        Match match = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+
+    }
+
+    private Match mockMatch(String team1, String team2, Teams teams1, Teams teams2) {
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
+        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
+                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
+                        (teams.stream().anyMatch(team1::equals)
+                                || teams.stream().anyMatch(team2::equals));
+        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
+                Objects::nonNull;
+
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teams1, teams2));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(teams1);
+        footballMatch.setAwayTeam(teams2);
+
+        doReturn(footballMatch).when(
+                scoreBoardService).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
+                                               argThat(scoreBoardArgumentMatcher));
+        return footballMatch;
+    }
+
+    //Add a convenience method to create Football match without passing game type , this is in addition to the generic
+    // match creation method which requires game type to passed
+    @Test
+    void When_CreateFootballMatch_Invoked_With_HomeTeam_And_AwayTeam_Should_Create_A_Match_Instance_Of_Game_Type_Football_With_Score_Zero() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        Match match = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+        assertEquals(match.getScore().get(mexico), 0);
+        assertEquals(match.getScore().get(canada), 0);
+    }
+
+    //Add a convenience method to update Football score just passing in home team score ,away team score and the
+    // match object
+    @Test
+    void When_UpdateScore_Invoked_With_HomeTeam_And_AwayTeam_Score_Should_update_footballmatch_score() {
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        Match matchMock = new FootballMatch(footballScoreBoard, teams);
+
+        FootballMatch footballMatch1 = new FootballMatch(footballScoreBoard, teams);
+
+
+        doReturn(matchMock).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                        Set.of(mexico.getName(),
+                                                                               canada.getName())).contains(team.getName())),
+                                                                argThat(score -> {
+                                                                    if (score instanceof Integer &&
+                                                                            (Integer) score == 0)
+                                                                        return true;
+                                                                    assert score instanceof Integer;
+                                                                    return (Integer) score == 5;
+                                                                }),
+                                                                argThat(matchArg -> matchArg instanceof FootballMatch));
+        Map<String, Object> scoreUpdate = new HashMap<>();
+        scoreUpdate.put(MEXICO, 1);
+        scoreUpdate.put(CANADA, 1);
+
+        Match match = footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch1);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+        assertEquals(match.getScore().get(mexico), 0);
+        assertEquals(match.getScore().get(canada), 0);
     }
 
     @Test
@@ -77,27 +159,6 @@ class ScoreBoardTest {
         Match match2 = rugbyScoreBoard.createMatch(rugbyTeamNames);
         assertInstanceOf(Match.class, match2);
         assertInstanceOf(RugbyMatch.class, match2);
-    }
-
-    private Match mockMatch(String team1, String team2, Teams teams1, Teams teams2) {
-        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
-        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        (teams.stream().anyMatch(team1::equals)
-                                || teams.stream().anyMatch(team2::equals));
-        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                Objects::nonNull;
-
-
-        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(teams1, teams2));
-        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
-        footballMatch.setHomeTeam(teams1);
-        footballMatch.setAwayTeam(teams2);
-
-        doReturn(footballMatch).when(
-                scoreBoardService).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
-                                               argThat(scoreBoardArgumentMatcher));
-        return footballMatch;
     }
 
     @Test
@@ -262,8 +323,44 @@ class ScoreBoardTest {
 
     }
 
+
     @Test
-    void When_UpdateScore_Invoked_Should_Update_Score_Of_A_Match() {
+    void When_UpdateScore_Invoked_With_A_Team_Not_In_ScoreBoard_Should_Throw_Exception() {
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        Match matchMock = new FootballMatch(scoreBoard, teams);
+
+        Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
+
+
+        matchMockUpdate.getScore().put(mexico, 0);
+        matchMockUpdate.getScore().put(canada, 5);
+
+        doReturn(matchMockUpdate).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                              Set.of(mexico.getName(),
+                                                                                     canada.getName())).contains(team.getName())),
+                                                                      argThat(score -> {
+                                                                          if (score instanceof Integer &&
+                                                                                  (Integer) score == 0) return true;
+                                                                          assert score instanceof Integer;
+                                                                          return (Integer) score == 5;
+                                                                      }),
+                                                                      argThat(matchArg -> matchArg instanceof FootballMatch));
+        Map<String, Object> scoreUpdate = new HashMap<>();
+        scoreUpdate.put(MEXICO, 1);
+        scoreUpdate.put(CANADA, 1);
+
+        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate, footballMatch),
+                     "Match should be associated to that score board");
+    }
+
+    @Test
+    void When_UpdateScore_Invoked_Should_Update_Score_Of_A_Match()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
         FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
         footballMatch.setHomeTeam(mexico);
@@ -290,7 +387,14 @@ class ScoreBoardTest {
         Map<String, Object> scoreUpdate = new HashMap<>();
         scoreUpdate.put(MEXICO, 0);
         scoreUpdate.put(CANADA, 5);
+        Field matches
+                = ScoreBoard.class.getDeclaredField("matches");
 
+        // Set the accessibility as true
+        matches.setAccessible(true);
+
+        Set matchSet = (HashSet) matches.get(scoreBoard);
+        matchSet.add(matchMock);
         Match matchResponse = scoreBoard.updateScore(scoreUpdate, matchMock);
 
         assertNotNull(matchResponse.getScore());
