@@ -7,6 +7,12 @@ public class Constants {
     public static final String CANADA = "CANADA";
     public static final String SPAIN = "SPAIN";
     public static final String BRAZIL = "BRAZIL";
+    public static final String GERMANY = "GERMANY";
+    public static final String FRANCE = "FRANCE";
+    public static final String URUGUAY = "URUGUAY";
+    public static final String ITALY = "ITALY";
+    public static final String ARGENTINA = "ARGENTINA";
+    public static final String AUSTRAILIA = "AUSTRAILIA";
 
     public static final String VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH =
             "Only score of Teams in this match can be updated, one or any of team name provided is not name of team " +

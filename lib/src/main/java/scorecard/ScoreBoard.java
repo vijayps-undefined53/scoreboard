@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 import static scorecard.Constants.*;
 
 public class ScoreBoard {
-    private final Set<Match> matches = new HashSet<>();
+    private final List<Match> matches = new ArrayList<>();
     String game;
     ScoreBoardService scoreBoardService;
 
@@ -82,7 +82,7 @@ public class ScoreBoard {
     }
 
     public List<Match> getMatches() {
-        return new ArrayList<>(this.matches);
+        return this.matches;
     }
 
     public Match updateScore(Map<String, Object> score,
@@ -148,5 +148,10 @@ public class ScoreBoard {
             throw new RuntimeException("Match not associated to this score board");
         }
         return this.matches.remove(footballMatch);
+    }
+
+    public String getSummaryOfMatches() {
+        //TO DO
+        return null;
     }
 }

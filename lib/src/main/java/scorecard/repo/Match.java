@@ -44,6 +44,15 @@ public abstract class Match {
         return Objects.equals(getId(), match.getId());
     }
 
+    @Override
+    public String toString() {
+        String response = "";
+        for (Map.Entry<Teams, Object> entry : score.entrySet()) {
+            response += entry.getKey().getName() + " " + entry.getValue().toString();
+        }
+        return response;
+    }
+
     public Integer getId() {
         return id;
     }
@@ -57,7 +66,4 @@ public abstract class Match {
     }
 
     public abstract Match updateScore(Teams teams, Object score, Match match);
-//
-//    abstract Teams getWinner();
-
 }
