@@ -40,7 +40,7 @@ public class Teams {
 
     @Override
     public String toString() {
-        return "Team name = " + name;
+        return name;
     }
 
     public Integer getId() {

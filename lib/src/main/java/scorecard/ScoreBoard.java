@@ -143,6 +143,10 @@ public class ScoreBoard {
         return footballMatch;
     }
 
-    public void finishMatch(Match footballMatch) {
+    public boolean finishMatch(Match footballMatch) {
+        if (!this.matches.contains(footballMatch)) {
+            throw new RuntimeException("Match not associated to this score board");
+        }
+        return this.matches.remove(footballMatch);
     }
 }

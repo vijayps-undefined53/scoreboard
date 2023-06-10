@@ -507,14 +507,13 @@ class ScoreBoardTest {
     }
 
     @Test
-    void When_FinishMatch_Invoked_Should_Remove_Match_From_ScoreBoard() {
+    void When_FinishMatch_Invoked_With_Match_Not_In_ScoreBoard_Should_Throw_An_Exception() {
         mockMatch(MEXICO, CANADA, mexico, canada);
         Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
         assertInstanceOf(Match.class, footballMatch);
         assertInstanceOf(FootballMatch.class, footballMatch);
         assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
-        footballScoreBoard.finishMatch(footballMatch);
-        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+
 
         mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
         LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
@@ -522,8 +521,12 @@ class ScoreBoardTest {
         assertNotNull(rugbyScoreBoardMatch);
         assertInstanceOf(Match.class, rugbyScoreBoardMatch);
         assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
-        rugbyScoreBoard.finishMatch(rugbyScoreBoardMatch);
-        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+
+        assertThrows(RuntimeException.class, () -> footballScoreBoard.finishMatch(rugbyScoreBoardMatch));
+        assertThrows(RuntimeException.class, () -> rugbyScoreBoard.finishMatch(footballMatch));
+
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
     }
 
     private Match mockRugbyMatch(String team1, String team2, Teams teams1, Teams teams2) {
@@ -543,5 +546,25 @@ class ScoreBoardTest {
                 scoreBoardService).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
                                                argThat(scoreBoardArgumentMatcher));
         return rugbyMatch;
+    }
+
+    @Test
+    void When_FinishMatch_Invoked_Should_Remove_Match_From_ScoreBoard() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        assertInstanceOf(Match.class, footballMatch);
+        assertInstanceOf(FootballMatch.class, footballMatch);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        footballScoreBoard.finishMatch(footballMatch);
+        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+
+        mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
+        LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
+        RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
+        assertNotNull(rugbyScoreBoardMatch);
+        assertInstanceOf(Match.class, rugbyScoreBoardMatch);
+        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        rugbyScoreBoard.finishMatch(rugbyScoreBoardMatch);
+        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
     }
 }
