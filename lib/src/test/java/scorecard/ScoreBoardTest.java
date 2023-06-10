@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.*;
+import org.mockito.internal.matchers.Matches;
 import scorecard.repo.FootballMatch;
 import scorecard.repo.Match;
 import scorecard.repo.RugbyMatch;
@@ -52,7 +53,7 @@ class ScoreBoardTest {
     Teams uruguay = teamsService.createTeams(URUGUAY);
     Teams italy = teamsService.createTeams(ITALY);
     Teams argentina = teamsService.createTeams(ARGENTINA);
-    Teams austrailia = teamsService.createTeams(AUSTRAILIA);
+    Teams austrailia = teamsService.createTeams(AUSTRALIA);
 
     @BeforeEach
     public void initMocks() {
@@ -115,7 +116,7 @@ class ScoreBoardTest {
 
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
         FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
-        addMatchToScoreBoard(footballMatch, footballScoreBoard);
+        addMatchToScoreBoard(null, footballMatch, footballScoreBoard);
 
         FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
         matchMock.setHomeTeam(mexico);
@@ -138,7 +139,7 @@ class ScoreBoardTest {
         assertThrows(RuntimeException.class, () -> footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch));
     }
 
-    private void addMatchToScoreBoard(Match matchMock, ScoreBoard scoreBoard)
+    private void addMatchToScoreBoard(FootballMatch original, Match matchMock, ScoreBoard fscoreBoard)
             throws
             NoSuchFieldException,
             IllegalAccessException {
@@ -148,7 +149,10 @@ class ScoreBoardTest {
         // Set the accessibility as true
         matches.setAccessible(true);
 
-        Set matchSet = (HashSet) matches.get(scoreBoard);
+        List matchSet = (ArrayList<Matches>) matches.get(fscoreBoard);
+        if (original != null) {
+            fscoreBoard.finishMatch(original);
+        }
         matchSet.add(matchMock);
     }
 
@@ -164,7 +168,7 @@ class ScoreBoardTest {
         FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
         footballMatch.setHomeTeam(mexico);
         footballMatch.setAwayTeam(canada);
-        addMatchToScoreBoard(footballMatch, footballScoreBoard);
+        addMatchToScoreBoard(null, footballMatch, footballScoreBoard);
 
         FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
         matchMock.setHomeTeam(mexico);
@@ -197,7 +201,7 @@ class ScoreBoardTest {
         FootballMatch footballMatch = new FootballMatch(footballScoreBoard, teams);
         footballMatch.setHomeTeam(mexico);
         footballMatch.setAwayTeam(canada);
-        addMatchToScoreBoard(footballMatch, footballScoreBoard);
+        addMatchToScoreBoard(null, footballMatch, footballScoreBoard);
 
         FootballMatch matchMock = new FootballMatch(footballScoreBoard, teams);
         matchMock.setHomeTeam(mexico);
@@ -503,7 +507,7 @@ class ScoreBoardTest {
         Map<String, Object> scoreUpdate = new HashMap<>();
         scoreUpdate.put(MEXICO, 0);
         scoreUpdate.put(CANADA, 5);
-        addMatchToScoreBoard(matchMock, scoreBoard);
+        addMatchToScoreBoard(null, matchMock, scoreBoard);
         Match matchResponse = scoreBoard.updateScore(scoreUpdate, matchMock);
 
         assertNotNull(matchResponse.getScore());
@@ -576,13 +580,105 @@ class ScoreBoardTest {
     }
 
     @Test
-    void When_SummaryOfMatches_Invoked_Should_Get_A_Summary_Of_Matches_Order_By_Total_Score_And_Same_Total_Score_By_Recency() {
+    void When_SummaryOfMatches_Invoked_Should_Get_A_Summary_Of_Matches_Order_By_Total_Score_And_Same_Total_Score_By_Recency_TestWithChangeInOrder()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
         mockMatch(MEXICO, CANADA, mexico, canada);
-        Match footballMatchMexicoCanada = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        FootballMatch footballMatchMexicoCanada =
+                (FootballMatch) footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        footballMatchMexicoCanada.setHomeTeam(mexico);
+        footballMatchMexicoCanada.setAwayTeam(canada);
         assertInstanceOf(Match.class, footballMatchMexicoCanada);
         assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
         assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
-        updateScore((FootballMatch) footballMatchMexicoCanada, 0, 5, mexico, canada);
+        updateScore(footballMatchMexicoCanada, 0, 5, mexico,
+                    canada);
+
+
+        mockMatch(URUGUAY, ITALY, uruguay, italy);
+        Match footballMatchUruguayItaly = footballScoreBoard.createFootballMatch(URUGUAY, ITALY);
+        assertInstanceOf(Match.class, footballMatchUruguayItaly);
+        assertInstanceOf(FootballMatch.class, footballMatchUruguayItaly);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
+        updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
+
+        mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
+        Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
+        assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
+        assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
+        updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1, argentina, austrailia);
+
+        mockMatch(SPAIN, BRAZIL, spain, brazil);
+        Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
+        assertInstanceOf(Match.class, footballMatchSpainBrazil);
+        assertInstanceOf(FootballMatch.class, footballMatchSpainBrazil);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchSpainBrazil));
+        updateScore((FootballMatch) footballMatchSpainBrazil, 10, 2, spain, brazil);
+
+        mockMatch(GERMANY, FRANCE, germany, france);
+        Match footballMatchGermanyFrance = footballScoreBoard.createFootballMatch(GERMANY, FRANCE);
+        assertInstanceOf(Match.class, footballMatchGermanyFrance);
+        assertInstanceOf(FootballMatch.class, footballMatchGermanyFrance);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchGermanyFrance));
+        updateScore((FootballMatch) footballMatchGermanyFrance, 2, 2, germany, france);
+
+        String summaryOfMatches = "1. SPAIN 10 - BRAZIL 2\n" +
+                "2. URUGUAY 6 - ITALY 6\n" +
+                "3. MEXICO 0 - CANADA 5\n" +
+                "4. GERMANY 2 - FRANCE 2\n" +
+                "5. ARGENTINA 3 - AUSTRALIA 1";
+        String actual = footballScoreBoard.getSummaryOfMatches();
+        assertNotNull(actual);
+        assertEquals(summaryOfMatches, actual);
+    }
+
+    private void updateScore(FootballMatch footballMatch, Integer homeTeamScore, Integer awayTeamScore, Teams homeTeam,
+                             Teams awayTeam)
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(homeTeam, awayTeam));
+        FootballMatch matchMockUpdate = new FootballMatch(scoreBoard, teams);
+        matchMockUpdate.setHomeTeam(homeTeam);
+        matchMockUpdate.setAwayTeam(awayTeam);
+        matchMockUpdate.getScore().put(homeTeam, homeTeamScore);
+        matchMockUpdate.getScore().put(awayTeam, awayTeamScore);
+        FootballMatch original = footballMatch;
+        doReturn(matchMockUpdate).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                              Set.of(homeTeam.getName(),
+                                                                                     awayTeam.getName())).contains(team.getName())),
+                                                                      argThat(score -> {
+                                                                          if (score instanceof Integer &&
+                                                                                  score == homeTeamScore)
+                                                                              return true;
+                                                                          assert score instanceof Integer;
+                                                                          return score == awayTeamScore;
+                                                                      }),
+                                                                      argThat(matchArg -> matchArg instanceof FootballMatch));
+        footballMatch =
+                (FootballMatch) footballScoreBoard.updateFootballMatchScore(homeTeamScore, awayTeamScore,
+                                                                            footballMatch);
+        addMatchToScoreBoard(original, footballMatch, footballScoreBoard);
+    }
+
+    @Test
+    void When_SummaryOfMatches_Invoked_Should_Get_A_Summary_Of_Matches_Order_By_Total_Score_And_Same_Total_Score_By_Recency()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        FootballMatch footballMatchMexicoCanada =
+                (FootballMatch) footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        footballMatchMexicoCanada.setHomeTeam(mexico);
+        footballMatchMexicoCanada.setAwayTeam(canada);
+        assertInstanceOf(Match.class, footballMatchMexicoCanada);
+        assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
+        updateScore(footballMatchMexicoCanada, 0, 5, mexico,
+                    canada);
+
 
         mockMatch(SPAIN, BRAZIL, spain, brazil);
         Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
@@ -606,42 +702,21 @@ class ScoreBoardTest {
         assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
         updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
 
-        mockMatch(ARGENTINA, AUSTRAILIA, argentina, austrailia);
-        Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRAILIA);
+        mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
+        Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
         assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
         assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
         assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
         updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1, argentina, austrailia);
 
-        String summaryOfMatches = "1. Uruguay 6 - Italy 6\n" +
-                "2. Spain 10 - Brazil 2\n" +
-                "3. Mexico 0 - Canada 5\n" +
-                "4. Argentina 3 - Australia 1 \n5. Germany 2 - France 2";
-        assertNotNull(footballScoreBoard.getSummaryOfMatches());
-        assertEquals(summaryOfMatches, footballScoreBoard.getSummaryOfMatches());
+        String summaryOfMatches = "1. URUGUAY 6 - ITALY 6\n" +
+                "2. SPAIN 10 - BRAZIL 2\n" +
+                "3. MEXICO 0 - CANADA 5\n" +
+                "4. ARGENTINA 3 - AUSTRALIA 1\n" +
+                "5. GERMANY 2 - FRANCE 2";
+        String actual = footballScoreBoard.getSummaryOfMatches();
+        assertNotNull(actual);
+        assertEquals(summaryOfMatches, actual);
     }
 
-    private void updateScore(FootballMatch footballMatch, Integer homeTeamScore, Integer awayTeamScore, Teams homeTeam,
-                             Teams awayTeam) {
-        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(homeTeam, awayTeam));
-        Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
-
-
-        matchMockUpdate.getScore().put(homeTeam, homeTeamScore);
-        matchMockUpdate.getScore().put(awayTeam, awayTeamScore);
-
-        doReturn(matchMockUpdate).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
-                                                                              Set.of(homeTeam.getName(),
-                                                                                     awayTeam.getName())).contains(team.getName())),
-                                                                      argThat(score -> {
-                                                                          if (score instanceof Integer &&
-                                                                                  score == homeTeamScore)
-                                                                              return true;
-                                                                          assert score instanceof Integer;
-                                                                          return score == awayTeamScore;
-                                                                      }),
-                                                                      argThat(matchArg -> matchArg instanceof FootballMatch));
-
-        footballScoreBoard.updateFootballMatchScore(homeTeamScore, awayTeamScore, footballMatch);
-    }
 }

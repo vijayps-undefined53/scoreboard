@@ -9,6 +9,7 @@ import scorecard.repo.Teams;
 import scorecard.service.impl.ScoreBoardService;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import static scorecard.Constants.*;
@@ -77,10 +78,6 @@ public class ScoreBoard {
         return null;
     }
 
-    public List<Match> getMatches() {
-        return this.matches;
-    }
-
     public Match updateScore(Map<String, Object> score,
                              Match match) {
         if (!this.matches.contains(match)) {
@@ -143,7 +140,45 @@ public class ScoreBoard {
     }
 
     public String getSummaryOfMatches() {
-        //TO DO
-        return null;
+        if (!game.equals(FOOTBALL)) {
+            throw new RuntimeException("Summary pattern is supported for only Football Matches");
+        }
+        Comparator<Match> byScore =
+                (match, match1) -> match.getScore().values().stream().map(v -> (Integer) v).reduce(0,
+                                                                                                   Integer::sum).compareTo(
+                        match1.getScore().values().stream().map(v -> (Integer) v).reduce(0,
+                                                                                         Integer::sum));
+        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatches());
+        getSummaryOfMatchesList.sort(byScore);
+        Collections.reverse(getSummaryOfMatchesList);
+        AtomicInteger i = new AtomicInteger(1);
+        return getSummaryOfMatchesList.stream().map(match -> {
+            FootballMatch mat = (FootballMatch) match;
+            Map<Teams, Object> score = match.getScore();
+            StringBuilder response = new StringBuilder();
+            if (score != null && !score.entrySet().isEmpty()) {
+                response.append(i.getAndIncrement()).append(".").append(" ");
+                StringBuilder homeTeam = new StringBuilder();
+                homeTeam.append(mat.getHomeTeam().getName());
+                StringBuilder awayTeam = new StringBuilder();
+                awayTeam.append(mat.getAwayTeam().getName());
+
+                for (Map.Entry<Teams, Object> entry : score.entrySet()) {
+                    if (mat.getHomeTeam().getName().equals(entry.getKey().getName())) {
+                        homeTeam.append(" ").append(entry.getValue().toString());
+                    }
+                    if (mat.getAwayTeam().getName().equals(entry.getKey().getName())) {
+                        awayTeam.append(" ").append(entry.getValue().toString());
+                    }
+                }
+                response.append(homeTeam).append(" ").append("-").append(" ");
+                response.append(awayTeam);
+            }
+            return response;
+        }).collect(Collectors.joining("\n"));
+    }
+
+    public List<Match> getMatches() {
+        return this.matches;
     }
 }
