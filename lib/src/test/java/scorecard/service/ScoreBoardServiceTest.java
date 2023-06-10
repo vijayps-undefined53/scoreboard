@@ -45,19 +45,52 @@ public class ScoreBoardServiceTest {
 
     @Test
     void When_CreateMatch_Invoked_Should_CreateMatchInstance_Based_On_Game() {
-        ArgumentMatcher<String> gameMatcher = gamename -> FOOTBALL.equals(gamename);
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
         ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
                 teams -> teams != null && teams.stream().allMatch(Objects::nonNull);
         ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                s -> s != null && s instanceof ScoreBoard;
+                Objects::nonNull;
 
         Teams mexico = teamsService.createTeams(MEXICO);
         Teams canada = teamsService.createTeams(CANADA);
 
         LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
-        Match footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
-        ((FootballMatch) footballMatch).setHomeTeam(mexico);
-        ((FootballMatch) footballMatch).setAwayTeam(canada);
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        doReturn(footballMatch).when(
+                matchService).createMatch(argThat(gameMatcher), argThat(scoreBoardArgumentMatcher),
+                                          argThat(teamNameMatcher)
+                                         );
+
+        Match match = scoreBoardService.createMatch(FOOTBALL, new LinkedHashSet<>(Set.of(MEXICO,
+                                                                                         CANADA)),
+                                                    scoreBoard);
+        assertInstanceOf(Match.class, match);
+        assertInstanceOf(FootballMatch.class, match);
+
+        assertNotNull(match.getScore());
+        FootballMatch footballMatchActual = (FootballMatch) match;
+        assertEquals(footballMatchActual.getHomeTeam().getName(), MEXICO);
+        assertEquals(footballMatchActual.getAwayTeam().getName(), CANADA);
+    }
+
+
+    @Test
+    void When_CreateMatch_Invoked_Should_Create_Match_Instance_With_Initial_Score_Zero() {
+        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
+        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
+                teams -> teams != null && teams.stream().allMatch(Objects::nonNull);
+        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
+                Objects::nonNull;
+
+        Teams mexico = teamsService.createTeams(MEXICO);
+        Teams canada = teamsService.createTeams(CANADA);
+
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
         doReturn(footballMatch).when(
                 matchService).createMatch(argThat(gameMatcher), argThat(scoreBoardArgumentMatcher),
                                           argThat(teamNameMatcher)
@@ -74,8 +107,20 @@ public class ScoreBoardServiceTest {
         assertEquals(footballMatchActual.getHomeTeam().getName(), MEXICO);
         assertEquals(footballMatchActual.getAwayTeam().getName(), CANADA);
 
-        assertEquals(footballMatchActual.getScore().get(mexico), 0);
-        assertEquals(footballMatchActual.getScore().get(canada), 0);
+        assertEquals(footballMatchActual.getScore().get(footballMatchActual.getHomeTeam()), 0);
+        assertEquals(footballMatchActual.getScore().get(footballMatchActual.getAwayTeam()), 0);
     }
 
+    @Test
+    void When_CreateMatch_Invoked_Should_Throw_Exception_If_Validation_Fails() {
+        assertThrows(RuntimeException.class, () -> scoreBoardService.createMatch(FOOTBALL, new LinkedHashSet<>(),
+                                                                                 scoreBoard));
+        assertThrows(RuntimeException.class,
+                     () -> scoreBoardService.createMatch(FOOTBALL, new LinkedHashSet<>(Set.of(MEXICO,
+                                                                                              CANADA)),
+                                                         null));
+        assertThrows(RuntimeException.class,
+                     () -> scoreBoardService.createMatch(FOOTBALL, null,
+                                                         scoreBoard));
+    }
 }

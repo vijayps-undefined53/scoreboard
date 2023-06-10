@@ -2,6 +2,7 @@ package scorecard.service.impl;
 
 import scorecard.ScoreBoard;
 import scorecard.repo.Match;
+import scorecard.repo.Teams;
 import scorecard.service.MatchService;
 
 import java.io.Serializable;
@@ -25,7 +26,11 @@ public class ScoreBoardService
         if (teams == null || teams.isEmpty() || teams.stream().anyMatch(Objects::isNull) || scoreBoard == null) {
             throw new RuntimeException("Invalid input for creating match");
         }
-        Match match = matchService.createMatch(game, scoreBoard, new LinkedHashSet<>(teams));
-        return match;
+        return matchService.createMatch(game, scoreBoard, new LinkedHashSet<>(teams));
+    }
+
+    public Match updateScore(Teams team, Object score,
+                             Match match) {
+        return null;
     }
 }

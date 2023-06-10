@@ -10,6 +10,8 @@ import scorecard.service.impl.ScoreBoardService;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static scorecard.Constants.VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH;
+
 public class ScoreBoard {
     List<Match> matches = new ArrayList<>();
     String game;
@@ -24,14 +26,9 @@ public class ScoreBoard {
         if (teams == null || teams.isEmpty() || teams.stream().anyMatch(Objects::isNull)) {
             throw new RuntimeException("Valid teams names expected");
         }
-        if (matches != null && !matches.isEmpty()) {
-            for (Match match : matches) {
-                Set<Teams> teamSet = match.getScore().keySet();
-                List<String> teamNames = teamSet.stream().map(Teams::getName).collect(Collectors.toList());
-                if (teamNames.stream().anyMatch(teams::contains)) {
-                    throw new RuntimeException("A match is already going on with the team names provided");
-                }
-            }
+        List<Teams> teamInMatch = findTeamsInScoreBoardBasedOnName(teams);
+        if (teamInMatch != null && !teamInMatch.isEmpty()) {
+            throw new RuntimeException("A match is already going one or both of team names provided");
         }
         Match match = scoreBoardService.createMatch(this.game, teams, this);
         // adding it to the scoreboard
@@ -39,12 +36,35 @@ public class ScoreBoard {
         return match;
     }
 
+    private List<Teams> findTeamsInScoreBoardBasedOnName(LinkedHashSet<String> teams) {
+        if (matches != null && !matches.isEmpty()) {
+            for (Match match : matches) {
+                List<Teams> teamsList = findTeamsInMatchBasedOnTeamNames(teams, match);
+                if (teamsList != null) return teamsList;
+            }
+        }
+        return null;
+    }
+
+    private List<Teams> findTeamsInMatchBasedOnTeamNames(LinkedHashSet<String> teams, Match match) {
+        if (match != null && match.getScore() != null) {
+            return match.getScore().keySet().stream().filter(
+                    teamObject -> teams.contains(teamObject.getName())).collect(
+                    Collectors.toList());
+        }
+        return null;
+    }
+
     public List<Match> getMatches() {
         return this.matches;
     }
 
-    public Match updateScore(Teams team, Object score,
+    public Match updateScore(Map<String, Object> score,
                              Match match) {
+        List<Teams> teamInMatch = findTeamsInMatchBasedOnTeamNames((LinkedHashSet<String>) score.keySet(), match);
+        if (teamInMatch == null || !(teamInMatch.size() == score.keySet().size())) {
+            throw new RuntimeException(VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH);
+        }
         return null;
     }
 }
