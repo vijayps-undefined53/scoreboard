@@ -44,11 +44,7 @@ public class ScoreBoard {
             throw new RuntimeException("Match cannot be created");
         }
         // adding it to the scoreboard
-        boolean duplicateMatchNotFound = this.matches.add(match);
-        if (!duplicateMatchNotFound) {
-            throw new RuntimeException("Match cannot be added to scoreboard, as a match is already present with same " +
-                                               "id");
-        }
+        this.matches.add(match);
         return match;
     }
 
@@ -112,11 +108,7 @@ public class ScoreBoard {
         validationsCreatingMatch(teams);
         FootballMatch match = (FootballMatch) scoreBoardService.createMatch(FOOTBALL, teams, this);
         // adding it to the scoreboard
-        boolean duplicateMatchNotFound = this.matches.add(match);
-        if (!duplicateMatchNotFound) {
-            throw new RuntimeException("Match cannot be added to scoreboard, as a match is already present with same " +
-                                               "id");
-        }
+        this.matches.add(match);
         return match;
     }
 

@@ -46,11 +46,13 @@ public abstract class Match {
 
     @Override
     public String toString() {
-        String response = "";
-        for (Map.Entry<Teams, Object> entry : score.entrySet()) {
-            response += entry.getKey().getName() + " " + entry.getValue().toString();
+        StringBuilder response = new StringBuilder();
+        if (score != null && !score.entrySet().isEmpty()) {
+            for (Map.Entry<Teams, Object> entry : score.entrySet()) {
+                response.append(entry.getKey().getName()).append(" ").append(entry.getValue().toString());
+            }
         }
-        return response;
+        return response.toString();
     }
 
     public Integer getId() {
