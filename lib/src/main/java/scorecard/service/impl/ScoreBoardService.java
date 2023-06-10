@@ -31,6 +31,6 @@ public class ScoreBoardService
 
     public Match updateScore(Teams team, Object score,
                              Match match) {
-        return null;
+        return matchService.updateScore(team, score, match);
     }
 }

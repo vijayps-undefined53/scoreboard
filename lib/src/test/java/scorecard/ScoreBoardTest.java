@@ -32,7 +32,7 @@ class ScoreBoardTest {
     @InjectMocks
     ScoreBoard rugbyScoreBoard = new ScoreBoard(RUGBY);
     @Mock
-    ScoreBoardService scoreBoardService;
+    ScoreBoardService scoreBoardService = ScoreBoardService.getInstance();
     @Mock
     ScoreBoardService rugbyScoreBoardService;
     @Mock
@@ -212,11 +212,11 @@ class ScoreBoardTest {
     }
 
     @Test
-    void When_CreateMatch_Invoked_WithoutValid_Input_Should_Throw_RuntimeException() {
+    void When_CreateMatch_Invoked_Without_Valid_Input_Should_Throw_RuntimeException() {
         mockMatch(MEXICO, CANADA, mexico, canada);
         LinkedHashSet<String> teamnames = new LinkedHashSet<>();
-        assertThrows(RuntimeException.class, () -> scoreBoard.createMatch(teamnames));
-        assertThrows(RuntimeException.class, () -> scoreBoard.createMatch(null));
+        assertThrows(RuntimeException.class, () -> scoreBoard.createMatch(teamnames), VALID_TEAM_NAME_EXPECTED);
+        assertThrows(RuntimeException.class, () -> scoreBoard.createMatch(null), VALID_TEAM_NAME_EXPECTED);
     }
 
     @Test
@@ -231,172 +231,72 @@ class ScoreBoardTest {
 
     @Test
     void When_UpdateScore_Invoked_With_A_Team_Not_In_Match_Should_Throw_Exception() {
-        mockMatch(MEXICO, CANADA, mexico, canada);
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        Match matchMock = new FootballMatch(scoreBoard, teams);
 
-        LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
-        Match match = scoreBoard.createMatch(teamnames);
-
-
-        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
-        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        (teams.stream().anyMatch(MEXICO::equals)
-                                || teams.stream().anyMatch(CANADA::equals));
-        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                Objects::nonNull;
-        Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
-                                                                argThat(scoreBoardArgumentMatcher));
-
-        mockMatch(SPAIN, BRAZIL, spain, brazil);
-        teamnames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
-        Match match2 = scoreBoard.createMatch(teamnames);
-        ArgumentMatcher<String> gameMatcher2 = FOOTBALL::equals;
-        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(SPAIN::equals)
-                        && teams.stream().anyMatch(BRAZIL::equals);
-        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher2 =
-                Objects::nonNull;
-
-        Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher2), argThat(teamNameMatcher2),
-                                                                argThat(scoreBoardArgumentMatcher2));
-
-        assertInstanceOf(Match.class, match);
-        assertInstanceOf(FootballMatch.class, match);
-
-        assertInstanceOf(Match.class, match2);
-        assertInstanceOf(FootballMatch.class, match2);
-
-        List<Match> matchListActual = scoreBoard.getMatches();
-        assertInstanceOf(List.class, matchListActual);
-        assertNotNull(matchListActual);
-        assertEquals(matchListActual.size(), 2);
-        assertNotNull(matchListActual.get(0).getScore());
-        assertNotNull(matchListActual.get(1).getScore());
-
-        FootballMatch footballMatchActual = (FootballMatch) matchListActual.get(0);
-        assertEquals(footballMatchActual.getHomeTeam().getName(), MEXICO);
-        assertEquals(footballMatchActual.getAwayTeam().getName(), CANADA);
-
-        assertEquals(footballMatchActual.getScore().get(mexico), 0);
-        assertEquals(footballMatchActual.getScore().get(canada), 0);
+        Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
 
 
-        FootballMatch footballMatchActual2 = (FootballMatch) matchListActual.get(1);
-        assertEquals(footballMatchActual2.getHomeTeam().getName(), SPAIN);
-        assertEquals(footballMatchActual2.getAwayTeam().getName(), BRAZIL);
+        matchMockUpdate.getScore().put(mexico, 0);
+        matchMockUpdate.getScore().put(canada, 5);
 
-        assertEquals(footballMatchActual2.getScore().get(spain), 0);
-        assertEquals(footballMatchActual2.getScore().get(brazil), 0);
-
-        //Update Score
-        match.getScore().put(mexico, 0);
-        doReturn(match).when(scoreBoardService).updateScore(argThat(team -> team.equals(mexico)),
-                                                            argThat(score -> score instanceof Integer &&
-                                                                    (Integer) score == 0),
-                                                            argThat(matchArg -> matchArg instanceof FootballMatch));
-        match.getScore().put(canada, 5);
-        doReturn(match).when(scoreBoardService).updateScore(argThat(team -> team.equals(canada)),
-                                                            argThat(score -> score instanceof Integer &&
-                                                                    (Integer) score == 5),
-                                                            argThat(matchArg -> matchArg instanceof FootballMatch));
+        doReturn(matchMockUpdate).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                              Set.of(mexico.getName(),
+                                                                                     canada.getName())).contains(team.getName())),
+                                                                      argThat(score -> {
+                                                                          if (score instanceof Integer &&
+                                                                                  (Integer) score == 0) return true;
+                                                                          assert score instanceof Integer;
+                                                                          return (Integer) score == 5;
+                                                                      }),
+                                                                      argThat(matchArg -> matchArg instanceof FootballMatch));
         Map<String, Object> scoreUpdate = new HashMap<>();
         scoreUpdate.put("USA", 1);
         scoreUpdate.put("CAMBODIA", 1);
 
-        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate, footballMatchActual),
+        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate, matchMock),
                      VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH);
 
     }
 
     @Test
     void When_UpdateScore_Invoked_Should_Update_Score_Of_A_Match() {
-        mockMatch(MEXICO, CANADA, mexico, canada);
+        LinkedHashSet<Teams> teams = new LinkedHashSet<>(Set.of(mexico, canada));
+        FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
+        footballMatch.setHomeTeam(mexico);
+        footballMatch.setAwayTeam(canada);
+        Match matchMock = new FootballMatch(scoreBoard, teams);
 
-        LinkedHashSet<String> teamnames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
-        Match match = scoreBoard.createMatch(teamnames);
-
-
-        ArgumentMatcher<String> gameMatcher = FOOTBALL::equals;
-        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        (teams.stream().anyMatch(MEXICO::equals)
-                                || teams.stream().anyMatch(CANADA::equals));
-        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher =
-                Objects::nonNull;
-        Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher), argThat(teamNameMatcher),
-                                                                argThat(scoreBoardArgumentMatcher));
-
-        mockMatch(SPAIN, BRAZIL, spain, brazil);
-        teamnames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
-        Match match2 = scoreBoard.createMatch(teamnames);
-        ArgumentMatcher<String> gameMatcher2 = FOOTBALL::equals;
-        ArgumentMatcher<LinkedHashSet<String>> teamNameMatcher2 =
-                teams -> teams != null && teams.stream().allMatch(Objects::nonNull) &&
-                        teams.stream().anyMatch(SPAIN::equals)
-                        && teams.stream().anyMatch(BRAZIL::equals);
-        ArgumentMatcher<ScoreBoard> scoreBoardArgumentMatcher2 =
-                Objects::nonNull;
-
-        Mockito.verify(scoreBoardService, times(1)).createMatch(argThat(gameMatcher2), argThat(teamNameMatcher2),
-                                                                argThat(scoreBoardArgumentMatcher2));
-
-        assertInstanceOf(Match.class, match);
-        assertInstanceOf(FootballMatch.class, match);
-
-        assertInstanceOf(Match.class, match2);
-        assertInstanceOf(FootballMatch.class, match2);
-
-        List<Match> matchListActual = scoreBoard.getMatches();
-        assertInstanceOf(List.class, matchListActual);
-        assertNotNull(matchListActual);
-        assertEquals(matchListActual.size(), 2);
-        assertNotNull(matchListActual.get(0).getScore());
-        assertNotNull(matchListActual.get(1).getScore());
-
-        FootballMatch footballMatchActual = (FootballMatch) matchListActual.get(0);
-        assertEquals(footballMatchActual.getHomeTeam().getName(), MEXICO);
-        assertEquals(footballMatchActual.getAwayTeam().getName(), CANADA);
-
-        assertEquals(footballMatchActual.getScore().get(mexico), 0);
-        assertEquals(footballMatchActual.getScore().get(canada), 0);
+        Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
 
 
-        FootballMatch footballMatchActual2 = (FootballMatch) matchListActual.get(1);
-        assertEquals(footballMatchActual2.getHomeTeam().getName(), SPAIN);
-        assertEquals(footballMatchActual2.getAwayTeam().getName(), BRAZIL);
+        matchMockUpdate.getScore().put(mexico, 0);
+        matchMockUpdate.getScore().put(canada, 5);
 
-        assertEquals(footballMatchActual2.getScore().get(spain), 0);
-        assertEquals(footballMatchActual2.getScore().get(brazil), 0);
+        doReturn(matchMockUpdate).when(scoreBoardService).updateScore(argThat(team -> new LinkedHashSet<>(
+                                                                              Set.of(mexico.getName(),
+                                                                                     canada.getName())).contains(team.getName())),
+                                                                      argThat(score -> {
+                                                                          if (score instanceof Integer &&
+                                                                                  (Integer) score == 0) return true;
+                                                                          assert score instanceof Integer;
+                                                                          return (Integer) score == 5;
+                                                                      }),
+                                                                      argThat(matchArg -> matchArg instanceof FootballMatch));
 
-        //Update Score
-        match.getScore().put(mexico, 0);
-        doReturn(match).when(scoreBoardService).updateScore(argThat(team -> team.equals(mexico)),
-                                                            argThat(score -> score instanceof Integer &&
-                                                                    (Integer) score == 0),
-                                                            argThat(matchArg -> matchArg instanceof FootballMatch));
-        match.getScore().put(canada, 5);
-        doReturn(match).when(scoreBoardService).updateScore(argThat(team -> team.equals(canada)),
-                                                            argThat(score -> score instanceof Integer &&
-                                                                    (Integer) score == 5),
-                                                            argThat(matchArg -> matchArg instanceof FootballMatch));
         Map<String, Object> scoreUpdate = new HashMap<>();
         scoreUpdate.put(MEXICO, 0);
         scoreUpdate.put(CANADA, 5);
 
-        scoreBoard.updateScore(scoreUpdate, footballMatchActual);
+        Match matchResponse = scoreBoard.updateScore(scoreUpdate, matchMock);
 
-        assertNotNull(match.getScore());
-        assertNotNull(match.getScore().get(mexico));
-        assertNotNull(match.getScore().get(canada));
-        assertEquals(5, match.getScore().get(canada), String.format("Score not updated for %s", canada));
-        assertEquals(0, match.getScore().get(mexico), String.format("Score not updated for %s", mexico));
-
-        assertNotNull(match2.getScore());
-        assertNotNull(match2.getScore().get(spain));
-        assertNotNull(match2.getScore().get(brazil));
-        assertEquals(10, match2.getScore().get(spain), String.format("Score not updated for %s", spain));
-        assertEquals(2, match2.getScore().get(brazil), String.format("Score not updated for %s", brazil));
-
+        assertNotNull(matchResponse.getScore());
+        assertNotNull(matchResponse.getScore().get(mexico));
+        assertNotNull(matchResponse.getScore().get(canada));
+        assertEquals(5, matchResponse.getScore().get(canada), String.format("Score not updated for %s", canada));
+        assertEquals(0, matchResponse.getScore().get(mexico), String.format("Score not updated for %s", mexico));
     }
 }
