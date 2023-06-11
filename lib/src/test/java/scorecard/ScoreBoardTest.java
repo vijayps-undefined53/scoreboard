@@ -322,7 +322,7 @@ class ScoreBoardTest {
         assertInstanceOf(Match.class, match2);
         assertInstanceOf(FootballMatch.class, match2);
 
-        List<Match> matchListActual = scoreBoard.getMatches();
+        List<Match> matchListActual = scoreBoard.getMatchesOrderedByCreatedDate();
         assertInstanceOf(List.class, matchListActual);
         assertNotNull(matchListActual);
         assertEquals(matchListActual.size(), 2);
@@ -375,7 +375,7 @@ class ScoreBoardTest {
         assertInstanceOf(RugbyMatch.class, match2);
 
 
-        List<Match> matchListActual = scoreBoard.getMatches();
+        List<Match> matchListActual = scoreBoard.getMatchesOrderedByCreatedDate();
         assertInstanceOf(List.class, matchListActual);
         assertNotNull(matchListActual);
         assertEquals(matchListActual.size(), 1);
@@ -388,7 +388,7 @@ class ScoreBoardTest {
         assertEquals(footballMatchActual.getScore().get(mexico), 0);
         assertEquals(footballMatchActual.getScore().get(canada), 0);
 
-        matchListActual = rugbyScoreBoard.getMatches();
+        matchListActual = rugbyScoreBoard.getMatchesOrderedByCreatedDate();
         assertInstanceOf(List.class, matchListActual);
 
         RugbyMatch rugbyMatchActual = (RugbyMatch) matchListActual.get(0);
@@ -528,7 +528,7 @@ class ScoreBoardTest {
         Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
         assertInstanceOf(Match.class, footballMatch);
         assertInstanceOf(FootballMatch.class, footballMatch);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
 
 
         mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
@@ -536,13 +536,13 @@ class ScoreBoardTest {
         RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
         assertNotNull(rugbyScoreBoardMatch);
         assertInstanceOf(Match.class, rugbyScoreBoardMatch);
-        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertTrue(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
 
         assertThrows(RuntimeException.class, () -> footballScoreBoard.finishMatch(rugbyScoreBoardMatch));
         assertThrows(RuntimeException.class, () -> rugbyScoreBoard.finishMatch(footballMatch));
 
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
-        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
+        assertTrue(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
     }
 
     private Match mockRugbyMatch(String team1, String team2, Teams teams1, Teams teams2) {
@@ -570,18 +570,18 @@ class ScoreBoardTest {
         Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
         assertInstanceOf(Match.class, footballMatch);
         assertInstanceOf(FootballMatch.class, footballMatch);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
         footballScoreBoard.finishMatch(footballMatch);
-        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+        assertFalse(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
 
         mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
         LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
         RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
         assertNotNull(rugbyScoreBoardMatch);
         assertInstanceOf(Match.class, rugbyScoreBoardMatch);
-        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertTrue(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
         rugbyScoreBoard.finishMatch(rugbyScoreBoardMatch);
-        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertFalse(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
     }
 
     @Test
@@ -596,7 +596,7 @@ class ScoreBoardTest {
         footballMatchMexicoCanada.setAwayTeam(canada);
         assertInstanceOf(Match.class, footballMatchMexicoCanada);
         assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchMexicoCanada));
         updateScore(footballMatchMexicoCanada, 0, 5, mexico,
                     canada);
 
@@ -605,28 +605,28 @@ class ScoreBoardTest {
         Match footballMatchUruguayItaly = footballScoreBoard.createFootballMatch(URUGUAY, ITALY);
         assertInstanceOf(Match.class, footballMatchUruguayItaly);
         assertInstanceOf(FootballMatch.class, footballMatchUruguayItaly);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchUruguayItaly));
         updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
 
         mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
         Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
         assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
         assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchArgentinaAustrailia));
         updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1, argentina, austrailia);
 
         mockMatch(SPAIN, BRAZIL, spain, brazil);
         Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
         assertInstanceOf(Match.class, footballMatchSpainBrazil);
         assertInstanceOf(FootballMatch.class, footballMatchSpainBrazil);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchSpainBrazil));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchSpainBrazil));
         updateScore((FootballMatch) footballMatchSpainBrazil, 10, 2, spain, brazil);
 
         mockMatch(GERMANY, FRANCE, germany, france);
         Match footballMatchGermanyFrance = footballScoreBoard.createFootballMatch(GERMANY, FRANCE);
         assertInstanceOf(Match.class, footballMatchGermanyFrance);
         assertInstanceOf(FootballMatch.class, footballMatchGermanyFrance);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchGermanyFrance));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchGermanyFrance));
         updateScore((FootballMatch) footballMatchGermanyFrance, 2, 2, germany, france);
 
         String summaryOfMatches = "1. SPAIN 10 - BRAZIL 2\n" +
@@ -634,7 +634,7 @@ class ScoreBoardTest {
                 "3. MEXICO 0 - CANADA 5\n" +
                 "4. GERMANY 2 - FRANCE 2\n" +
                 "5. ARGENTINA 3 - AUSTRALIA 1";
-        String actual = footballScoreBoard.getSummary();
+        String actual = footballScoreBoard.getSummaryAsAString();
         assertNotNull(actual);
         assertEquals(summaryOfMatches, actual);
     }
@@ -682,7 +682,7 @@ class ScoreBoardTest {
         footballMatchMexicoCanada.setAwayTeam(canada);
         assertInstanceOf(Match.class, footballMatchMexicoCanada);
         assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchMexicoCanada));
         updateScore(footballMatchMexicoCanada, 0, 5, mexico,
                     canada);
 
@@ -691,7 +691,7 @@ class ScoreBoardTest {
         Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
         assertInstanceOf(Match.class, footballMatchSpainBrazil);
         assertInstanceOf(FootballMatch.class, footballMatchSpainBrazil);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchSpainBrazil));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchSpainBrazil));
         updateScore((FootballMatch) footballMatchSpainBrazil, 10, 2, spain, brazil);
 
 
@@ -699,21 +699,21 @@ class ScoreBoardTest {
         Match footballMatchGermanyFrance = footballScoreBoard.createFootballMatch(GERMANY, FRANCE);
         assertInstanceOf(Match.class, footballMatchGermanyFrance);
         assertInstanceOf(FootballMatch.class, footballMatchGermanyFrance);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchGermanyFrance));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchGermanyFrance));
         updateScore((FootballMatch) footballMatchGermanyFrance, 2, 2, germany, france);
 
         mockMatch(URUGUAY, ITALY, uruguay, italy);
         Match footballMatchUruguayItaly = footballScoreBoard.createFootballMatch(URUGUAY, ITALY);
         assertInstanceOf(Match.class, footballMatchUruguayItaly);
         assertInstanceOf(FootballMatch.class, footballMatchUruguayItaly);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchUruguayItaly));
         updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
 
         mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
         Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
         assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
         assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchArgentinaAustrailia));
         updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1, argentina, austrailia);
 
         String summaryOfMatches = "1. URUGUAY 6 - ITALY 6\n" +
@@ -721,7 +721,7 @@ class ScoreBoardTest {
                 "3. MEXICO 0 - CANADA 5\n" +
                 "4. ARGENTINA 3 - AUSTRALIA 1\n" +
                 "5. GERMANY 2 - FRANCE 2";
-        String actual = footballScoreBoard.getSummary();
+        String actual = footballScoreBoard.getSummaryAsAString();
         assertNotNull(actual);
         assertEquals(summaryOfMatches, actual);
     }
@@ -734,18 +734,18 @@ class ScoreBoardTest {
         Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
         assertInstanceOf(Match.class, footballMatch);
         assertInstanceOf(FootballMatch.class, footballMatch);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
         footballScoreBoard.finishMatchByTeamName(MEXICO);
-        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+        assertFalse(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatch));
 
         mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
         LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
         RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
         assertNotNull(rugbyScoreBoardMatch);
         assertInstanceOf(Match.class, rugbyScoreBoardMatch);
-        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertTrue(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
         rugbyScoreBoard.finishMatchByTeamName(BRAZIL);
-        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        assertFalse(rugbyScoreBoard.getMatchesOrderedByCreatedDate().contains(rugbyScoreBoardMatch));
     }
 
     @Test
@@ -760,7 +760,7 @@ class ScoreBoardTest {
         footballMatchMexicoCanada.setAwayTeam(canada);
         assertInstanceOf(Match.class, footballMatchMexicoCanada);
         assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchMexicoCanada));
         footballMatchMexicoCanada = updateScore(footballMatchMexicoCanada, 0, 5, mexico,
                                                 canada);
 
@@ -769,7 +769,7 @@ class ScoreBoardTest {
         Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
         assertInstanceOf(Match.class, footballMatchSpainBrazil);
         assertInstanceOf(FootballMatch.class, footballMatchSpainBrazil);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchSpainBrazil));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchSpainBrazil));
         footballMatchSpainBrazil = updateScore((FootballMatch) footballMatchSpainBrazil, 10, 2, spain, brazil);
 
 
@@ -777,21 +777,21 @@ class ScoreBoardTest {
         Match footballMatchGermanyFrance = footballScoreBoard.createFootballMatch(GERMANY, FRANCE);
         assertInstanceOf(Match.class, footballMatchGermanyFrance);
         assertInstanceOf(FootballMatch.class, footballMatchGermanyFrance);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchGermanyFrance));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchGermanyFrance));
         footballMatchGermanyFrance = updateScore((FootballMatch) footballMatchGermanyFrance, 2, 2, germany, france);
 
         mockMatch(URUGUAY, ITALY, uruguay, italy);
         Match footballMatchUruguayItaly = footballScoreBoard.createFootballMatch(URUGUAY, ITALY);
         assertInstanceOf(Match.class, footballMatchUruguayItaly);
         assertInstanceOf(FootballMatch.class, footballMatchUruguayItaly);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchUruguayItaly));
         footballMatchUruguayItaly = updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
 
         mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
         Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
         assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
         assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
-        assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
+        assertTrue(footballScoreBoard.getMatchesOrderedByCreatedDate().contains(footballMatchArgentinaAustrailia));
         footballMatchArgentinaAustrailia = updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1,
                                                        argentina, austrailia);
 

@@ -14,11 +14,58 @@ import java.util.stream.Collectors;
 
 import static scorecard.Constants.*;
 
+/*
+    This ScoreBoard class creates an instance of scoreboard, it supports football by default, other games are
+    supported by explicitly passing in game type.
+    To use this scoreboard for a new game type implement the abstract Match class and ScoringStrategy interface for
+    that game.
+    Currently, football and Rugby related Scoring strategy and Match class type is supported.
+        1. By default, it supports football as it's game type.
+        2. Scoreboard has a constructor that takes in a string as game type.
+
+    The scoreboard supports the following operations:
+    1. Start a new match (any game or Football), initialise score 0 – 0 and add it to the scoreboard.
+            1. createFootballMatch method: We can start a new football match and passing in home and away team name.
+            2. createMatch method: We can start a new match for other games and passing in teams names as LinkedHashSet.
+
+    2. Update score:It has two implementations one is generic and other as a convenience method for football
+            1. updateFootballMatchScore method:We can update a football match score and passing in home and away
+               team goals(expecting zero or positive integer) and name, this method can be used only if scoreboard is
+               based on Football game for other games use generic method mentioned next
+
+            2. updateScore method:We can update a match (any game - football or any other game) score.
+               The input receives a Map of team names and an object representing score.
+               The team names in map should have all teams in match and should be part of same match .
+
+    3. Finish match currently in progress. This removes a match from the scoreboard, it has two implementations.
+
+            1. finishMatchByTeamName method removes a match from Scoreboard associated to this team name in input.
+            2. finishMatch method removes a match from Scoreboard by taking in Match object as input.
+
+    4. Get a summary of matches in progress ordered by their total score. The matches with the same total score will
+        be returned ordered by the most recently started match in the scoreboard, it has two implementations.
+
+            1. getSummaryAsAString method Gets a String which gives Summary of Matches in progress ordered by their
+               total score. The matches with the same total score will be returned ordered by the most recently started
+               match in the scoreboard.
+
+            2. getSummaryOfMatchObjects method Gets a List of Match objects which gives Summary of Matches in progress
+                ordered by their total score.The matches with the same total score will be returned ordered by the most
+                recently started match in the scoreboard.
+    5. Get a summary of matches in progress ordered by their created date, it has one implementation.
+
+            1. getMatchesOrderedByCreatedDate method Gets a List of Match objects which gives Summary of Matches in
+             progress ordered by their creation date.
+
+ */
 public class ScoreBoard {
     private final List<Match> matches = new ArrayList<>();
     String game;
     ScoreBoardService scoreBoardService;
 
+    //Score board can be used by passing in a game name to make it work for a game type.
+    // To use this scoreboard for a new game type implement the abstract Match class and Scoring strategy of that game.
+    // Currently, football and Rugby related scoring and Match class type is supported.
     public ScoreBoard(String game) {
         if (game.equals(FOOTBALL) || game.equals(RUGBY)) {
             this.game = game;
@@ -30,14 +77,29 @@ public class ScoreBoard {
         }
     }
 
-    //Convenience method to use Football game as Scoreboard game without passing game name.
+    //default constructor: Convenient to use Football game as Scoreboard game without passing game name.
     public ScoreBoard() {
         this.game = FOOTBALL;
         scoreBoardService = ScoreBoardService.getInstance();
     }
 
-    // This is a generic createMatch method for all games, this can be used to create match based on game name passed
-    // to ScoreBoard, default game type is football.
+    /*
+    This is a generic createMatch method for all games, this Starts a new match (any game or Football),
+    initialize score 0 – 0 and add it to the scoreboard based on game name passed.
+
+    To Create a football match give the Home Team name as first element and Away Team as second element of input set.
+    LinkedHashSet<String> is used as input to maintain an ordered unique team name set so order is important.
+
+    Params:teams – A LinkedHashSet of String Team names which will be teams of this match.
+
+    Validation:
+             All Team name should be a string which is not blank,
+             Runtime exception if a match is already going on for one or any of team names provided
+    Example:
+            LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));
+            createMatch(teamNames);
+     */
+
     public Match createMatch(LinkedHashSet<String> teams) {
         validationsCreatingMatch(teams);
         Match match = scoreBoardService.createMatch(this.game, teams, this);
@@ -49,67 +111,27 @@ public class ScoreBoard {
         return match;
     }
 
-    private void validationsCreatingMatch(LinkedHashSet<String> teams) {
-        if (teams == null || teams.isEmpty() || teams.stream().anyMatch(String::isBlank)) {
-            throw new RuntimeException(VALID_TEAM_NAME_EXPECTED);
-        }
-        Map<String, Teams> teamInMatch = findTeamsInScoreBoardBasedOnName(teams);
-        if (teamInMatch != null && !teamInMatch.isEmpty()) {
-            throw new RuntimeException("A match is already going on, for one or both of team names provided");
-        }
-    }
 
-    private Map<String, Teams> findTeamsInScoreBoardBasedOnName(LinkedHashSet<String> teams) {
-        if (!matches.isEmpty()) {
-            for (Match match : matches) {
-                Map<String, Teams> teamsList = findTeamsObjectInMatchBasedOnTeamNames(teams, match);
-                if (teamsList != null) return teamsList;
-            }
-        }
-        return null;
-    }
+    /*
+        This is a convenience method for creating a match of football instead of generic method, Scoreboard should have
+        game type football and this method can only be used to create football match, use generic createMatch method for
+        other games.
 
-    private Map<String, Teams> findTeamsObjectInMatchBasedOnTeamNames(LinkedHashSet<String> teams, Match match) {
-        if (match != null && match.getScore() != null) {
-            return match.getScore().keySet().stream().filter(
-                    teamObject -> teams.contains(teamObject.getName())).collect(
-                    Collectors.toMap(Teams::getName, teams1 -> teams1));
-        }
-        return null;
-    }
+        To Create a football match give the Home Team name as first element and Away Team as second element of input
+        set.
 
-    public Match updateScore(Map<String, Object> score) {
-        Match match = getMatchBasedOnTeamName(score.keySet());
-        Map<String, Teams> teamInMatch =
-                findTeamsObjectInMatchBasedOnTeamNames(new LinkedHashSet<>(score.keySet()), match);
-        if (teamInMatch == null || !(teamInMatch.size() == score.keySet().size())) {
-            throw new RuntimeException(VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH);
-        }
-        for (Map.Entry<String, Object> entry : score.entrySet()) {
-            match = scoreBoardService.updateScore(teamInMatch.get(entry.getKey()), entry.getValue(), match);
-        }
-        return match;
-    }
+        Params:
+             homeTeam - A string of home team name.
+             awayTeam - A string of home team name.
 
-    private Match getMatchBasedOnTeamName(Set<String> teams) {
-        if (!matches.isEmpty()) {
-            Optional<Match> optionalMatch = this.matches.stream().filter(match -> {
-                Set<Teams> teamsInMatch = match.getScore().keySet();
-                Set<String> teamsNamesInMatch = teamsInMatch.stream().map(Teams::getName).collect(Collectors.toSet());
-                return teamsNamesInMatch.containsAll(teams);
-            }).findAny();
-            if (optionalMatch.isPresent()) {
-                return optionalMatch.get();
-            } else {
-                throw new RuntimeException("Found no Match associated to this score board, with given teams, all " +
-                                                   "teams in input should be belonging to same match");
-            }
-        }
-        throw new RuntimeException("No matches in progress in this scoreboard");
-    }
+        Validation:
+             This method can be used only if scoreboard is based on Football game.
+             All Team name should be a string which is not blank,
+             Runtime exception if a match is already going on for one or any of team names provided.
 
-    // This is a convenience method for football game, Scoreboard should have game type football and this method can
-    // only be used to create football match, use generic createMatch method for other games
+        Example:
+            createFootballMatch(MEXICO, CANADA);
+ */
     public Match createFootballMatch(String homeTeam, String awayTeam) {
         if (!FOOTBALL.equals(this.game)) {
             throw new RuntimeException("Scoreboard should have game type football, this method can only be used to " +
@@ -129,8 +151,60 @@ public class ScoreBoard {
         return match;
     }
 
-    // This is a convenience method for football game, Scoreboard should have game type football and this method can
-    // only be used to update football score, use generic updateScore method for other games
+    /*
+    Update score.We can update a match (any game - football or any other game) score by calling this method.
+    The input receives a Map of team names and an object representing score.
+    The team names in map should have all teams in match and should be part of same match .
+
+    Score can be zero or positive integer in case of football  , it can be complex object of tennis score.
+
+     This method internally uses factory pattern , it uses a factory class based on input game type string to find the
+     right Match interface implementation like FootballMatch , RugbyMatch or if needed for Tennis just implement Match
+     interface and create a TennisMatch.
+
+    This uses strategy pattern internally for score related operations, it uses a ScoringStrategy class based on input
+    Score type to its constructor it picks the scoring strategy,like FootballScore , RugbyScore or if needed for
+    Tennis just implement Score interface for Tennis Score and pass it as ScoringStrategy to Tennis Match.
+
+    Param:
+         Map<String, Object> score = new HashMap<>();
+        score.put("MEXICO",5);
+        score.put("CANADA",6);
+
+        scoreBoard.updateScore(score);
+     */
+    public Match updateScore(Map<String, Object> score) {
+        Match match = getMatchBasedOnTeamName(score.keySet());
+        Map<String, Teams> teamInMatch =
+                findTeamsObjectInMatchBasedOnTeamNames(new LinkedHashSet<>(score.keySet()), match);
+        if (teamInMatch == null || !(teamInMatch.size() == score.keySet().size())) {
+            throw new RuntimeException(VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH);
+        }
+        for (Map.Entry<String, Object> entry : score.entrySet()) {
+            match = scoreBoardService.updateScore(teamInMatch.get(entry.getKey()), entry.getValue(), match);
+        }
+        return match;
+    }
+
+    /*
+     This is a convenience method for updating score of football game, Scoreboard should have game type football and
+     this method can only be used to update football score, use generic updateScore method for other games
+
+    Update Football Match score.We can update a football match score by calling this method.
+
+    The input receives Integer homeTeamScore, Integer awayTeamScore, String homeTeamName,String awayTeamName
+
+    Score can be zero or positive integer in case of football goals.
+
+    Param:
+       Integer homeTeamScore,
+       Integer awayTeamScore,
+       String homeTeamName,
+       String awayTeamName
+
+    Example:
+       scoreBoard.updateFootballMatchScore(0,5,"MEXICO","CANADA");
+     */
     public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, String homeTeamName,
                                           String awayTeamName) {
         if (!FOOTBALL.equals(this.game)) {
@@ -157,6 +231,34 @@ public class ScoreBoard {
         return updatedMatch;
     }
 
+    /*
+    finishMatchByTeamName method removes a match from Scoreboard associated to this team name in input.
+    Param:
+       String teamName.
+
+    Example:
+       scoreBoard.finishMatchByTeamName("MEXICO");
+    */
+    public void finishMatchByTeamName(String teamName) {
+        Match match = getMatchBasedOnTeamName(Set.of(teamName));
+        if (!this.matches.contains(match)) {
+            throw new RuntimeException("Match not associated to this score board");
+        }
+        this.matches.remove(match);
+    }
+
+    /*
+    finishMatch method removes a match from Scoreboard by taking in Match object as input.
+    Param:
+       Match interface type object is the representation of Match in Scoreboard, use getSummaryOfMatchObjects() to get
+        all match objects in scoreboard.
+
+       Match match.
+
+    Validation: there should be a valid match object in scoreboard matching this input object.
+    Example:
+       scoreBoard.finishMatch(match);
+    */
     public boolean finishMatch(Match match) {
         if (!this.matches.contains(match)) {
             throw new RuntimeException("Match not associated to this score board");
@@ -164,12 +266,36 @@ public class ScoreBoard {
         return this.matches.remove(match);
     }
 
+    private Match getMatchBasedOnTeamName(Set<String> teams) {
+        if (!matches.isEmpty()) {
+            Optional<Match> optionalMatch = this.matches.stream().filter(match -> {
+                Set<Teams> teamsInMatch = match.getScore().keySet();
+                Set<String> teamsNamesInMatch = teamsInMatch.stream().map(Teams::getName).collect(Collectors.toSet());
+                return teamsNamesInMatch.size() == teams.size() && teamsNamesInMatch.containsAll(teams);
+            }).findAny();
+            if (optionalMatch.isPresent()) {
+                return optionalMatch.get();
+            } else {
+                throw new RuntimeException("Found no Match associated to this score board, with given teams, all " +
+                                                   "teams in input should be belonging to same match");
+            }
+        }
+        throw new RuntimeException("No matches in progress in this scoreboard");
+    }
+
     /*
-    The pattern for summary of matches is compatible with only two player with zero or positive integer score game like
-    football,
-    so this method is only supported for Football.
+    getSummaryAsAString method Gets a String which gives Summary of Matches in progress ordered by their total score.
+    The matches with the same total score will be returned ordered by the most recently started match in the scoreboard.
+    Param:
+        No inputs needed.
+    Return:
+        A String with a numbered summary of matches on order described above.
+
+    Validation:
+        The pattern for summary of matches is compatible with only two player with zero or positive integer score game
+        like football, so this method is only supported for Football.
      */
-    public String getSummary() {
+    public String getSummaryAsAString() {
         if (!game.equals(FOOTBALL)) {
             throw new RuntimeException(
                     "The string pattern for summary of matches is compatible with only two player with zero or " +
@@ -182,7 +308,7 @@ public class ScoreBoard {
                                                                                                    Integer::sum).compareTo(
                         match1.getScore().values().stream().map(v -> (Integer) v).reduce(0,
                                                                                          Integer::sum));
-        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatches());
+        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatchesOrderedByCreatedDate());
         getSummaryOfMatchesList.sort(byScore);
         Collections.reverse(getSummaryOfMatchesList);
         AtomicInteger i = new AtomicInteger(1);
@@ -212,30 +338,66 @@ public class ScoreBoard {
         }).collect(Collectors.joining("\n"));
     }
 
-    public List<Match> getMatches() {
-        return this.matches;
-    }
-
     /*
-        This is another method to get summary of matches as list of match objects.
- */
+    getSummaryOfMatchObjects method Gets a List of Match objects which gives Summary of Matches in progress ordered by
+    their total score.
+    The matches with the same total score will be returned ordered by the most recently started match in the scoreboard.
+
+    Param:
+        No inputs needed.
+    Return:
+        A List with match objects on order described above.
+     */
     public List<Match> getSummaryOfMatchObjects() {
         Comparator<Match> byScore =
                 (match, match1) -> match.getScore().values().stream().map(v -> (Integer) v).reduce(0,
                                                                                                    Integer::sum).compareTo(
                         match1.getScore().values().stream().map(v -> (Integer) v).reduce(0,
                                                                                          Integer::sum));
-        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatches());
+        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatchesOrderedByCreatedDate());
         getSummaryOfMatchesList.sort(byScore);
         Collections.reverse(getSummaryOfMatchesList);
         return getSummaryOfMatchesList;
     }
 
-    public void finishMatchByTeamName(String teamName) {
-        Match match = getMatchBasedOnTeamName(Set.of(teamName));
-        if (!this.matches.contains(match)) {
-            throw new RuntimeException("Match not associated to this score board");
+    /*
+    getMatchesOrderedByCreatedDate method Gets a List of Match objects which gives Summary of Matches in progress
+    ordered by their creation date.
+    Param:
+        No inputs needed.
+    Return:
+        A List with match objects on order described above.
+    */
+    public List<Match> getMatchesOrderedByCreatedDate() {
+        return this.matches;
+    }
+
+    private void validationsCreatingMatch(LinkedHashSet<String> teams) {
+        if (teams == null || teams.isEmpty() || teams.stream().anyMatch(String::isBlank)) {
+            throw new RuntimeException(VALID_TEAM_NAME_EXPECTED);
         }
-        this.matches.remove(match);
+        Map<String, Teams> teamInMatch = findTeamsInScoreBoardBasedOnName(teams);
+        if (teamInMatch != null && !teamInMatch.isEmpty()) {
+            throw new RuntimeException("A match is already going on, for one or both of team names provided");
+        }
+    }
+
+    private Map<String, Teams> findTeamsInScoreBoardBasedOnName(LinkedHashSet<String> teams) {
+        if (!matches.isEmpty()) {
+            for (Match match : matches) {
+                Map<String, Teams> teamsList = findTeamsObjectInMatchBasedOnTeamNames(teams, match);
+                if (teamsList != null) return teamsList;
+            }
+        }
+        return null;
+    }
+
+    private Map<String, Teams> findTeamsObjectInMatchBasedOnTeamNames(LinkedHashSet<String> teams, Match match) {
+        if (match != null && match.getScore() != null) {
+            return match.getScore().keySet().stream().filter(
+                    teamObject -> teams.contains(teamObject.getName())).collect(
+                    Collectors.toMap(Teams::getName, teams1 -> teams1));
+        }
+        return null;
     }
 }
