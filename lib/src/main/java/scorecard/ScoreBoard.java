@@ -154,11 +154,11 @@ public class ScoreBoard {
         return updatedMatch;
     }
 
-    public boolean finishMatch(Match footballMatch) {
-        if (!this.matches.contains(footballMatch)) {
+    public boolean finishMatch(Match match) {
+        if (!this.matches.contains(match)) {
             throw new RuntimeException("Match not associated to this score board");
         }
-        return this.matches.remove(footballMatch);
+        return this.matches.remove(match);
     }
 
     /*
@@ -212,7 +212,11 @@ public class ScoreBoard {
         return this.matches;
     }
 
-    public void finishMatchByTeamName(String mexico) {
-        // TO DO
+    public void finishMatchByTeamName(String teamName) {
+        Match match = getMatchBasedOnTeamName(Set.of(teamName));
+        if (!this.matches.contains(match)) {
+            throw new RuntimeException("Match not associated to this score board");
+        }
+        this.matches.remove(match);
     }
 }
