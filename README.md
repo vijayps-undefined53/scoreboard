@@ -16,6 +16,10 @@
    ScoreBoard scoreBoardRugby = new ScoreBoard("rugby"); // Note: Football game is the fully supported and default game type  
   }
   
+  A factory pattern(MatchFactory class) for selecting Match interface implementation based on game type(string game name 
+  and a ScoringStrategy class takes as constructor param Score interface type, it picks the scoring strategy, using which different scoring operation .
+  To use this scoreboard for a new game type implement the abstract Match class and pass the Score interface implementation type to ScoringStrategy for that game. 
+  
   The scoreboard supports the following operations:
   1. Start a new match (any game or Football), initialise score 0 – 0 and add it to the scoreboard, it has two implementations.
             
@@ -104,16 +108,3 @@
                {
                  List<Match> listOrderedByCreatedDate = scoreBoard.getMatchesOrderedByCreatedDate();
                }
-  
-    This ScoreBoard supports football by default, other games are supported by explicitly passing in game type.
-    To use this scoreboard for a new game type implement the abstract Match class and ScoringStrategy interface for
-    that game. 
-    
-    A factory pattern(MatchFactory class) for selecting Match interface implementation based on game type(string game name)
-    and a ScoringStrategy class takes as constructor param Score interface type, it picks the scoring strategy, using which different scoring operation .
-    
-    Currently, football and Rugby related Scoring strategy and Match class type is supported.
-        1. By default, it supports football as it's game type.
-        2. Scoreboard has a constructor that takes in a string as game type.
-
-
