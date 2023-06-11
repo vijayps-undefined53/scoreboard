@@ -136,7 +136,8 @@ class ScoreBoardTest {
                                                                 }),
                                                                 argThat(matchArg -> matchArg instanceof FootballMatch));
 
-        assertThrows(RuntimeException.class, () -> footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch));
+        assertThrows(RuntimeException.class, () -> footballScoreBoard.updateFootballMatchScore(2, 10, MEXICO,
+                                                                                               CANADA));
     }
 
     private void addMatchToScoreBoard(FootballMatch original, Match matchMock, ScoreBoard fscoreBoard)
@@ -188,7 +189,8 @@ class ScoreBoardTest {
                                                                 }),
                                                                 argThat(matchArg -> matchArg instanceof FootballMatch));
 
-        assertThrows(RuntimeException.class, () -> rugbyScoreBoard.updateFootballMatchScore(2, 10, footballMatch));
+        assertThrows(RuntimeException.class,
+                     () -> rugbyScoreBoard.updateFootballMatchScore(2, 10, MEXICO, CANADA));
     }
 
     @Test
@@ -221,7 +223,7 @@ class ScoreBoardTest {
                                                                 }),
                                                                 argThat(matchArg -> matchArg instanceof FootballMatch));
 
-        Match match = footballScoreBoard.updateFootballMatchScore(2, 10, footballMatch);
+        Match match = footballScoreBoard.updateFootballMatchScore(2, 10, MEXICO, CANADA);
         assertInstanceOf(Match.class, match);
         assertInstanceOf(FootballMatch.class, match);
         assertEquals(match.getScore().get(mexico), 2);
@@ -417,7 +419,6 @@ class ScoreBoardTest {
         FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
         footballMatch.setHomeTeam(mexico);
         footballMatch.setAwayTeam(canada);
-        Match matchMock = new FootballMatch(scoreBoard, teams);
 
         Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
 
@@ -439,7 +440,7 @@ class ScoreBoardTest {
         scoreUpdate.put("USA", 1);
         scoreUpdate.put("CAMBODIA", 1);
 
-        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate, matchMock),
+        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate),
                      VALIDATION_ERROR_ON_UPDATING_SCORE_WITH_TEAM_NOT_IN_MATCH);
 
     }
@@ -450,8 +451,6 @@ class ScoreBoardTest {
         FootballMatch footballMatch = new FootballMatch(new ScoreBoard(FOOTBALL), teams);
         footballMatch.setHomeTeam(mexico);
         footballMatch.setAwayTeam(canada);
-        Match matchMock = new FootballMatch(scoreBoard, teams);
-
         Match matchMockUpdate = new FootballMatch(scoreBoard, teams);
 
 
@@ -472,7 +471,7 @@ class ScoreBoardTest {
         scoreUpdate.put(MEXICO, 1);
         scoreUpdate.put(CANADA, 1);
 
-        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate, footballMatch),
+        assertThrows(RuntimeException.class, () -> scoreBoard.updateScore(scoreUpdate),
                      "Match should be associated to that score board");
     }
 
@@ -508,7 +507,7 @@ class ScoreBoardTest {
         scoreUpdate.put(MEXICO, 0);
         scoreUpdate.put(CANADA, 5);
         addMatchToScoreBoard(null, matchMock, scoreBoard);
-        Match matchResponse = scoreBoard.updateScore(scoreUpdate, matchMock);
+        Match matchResponse = scoreBoard.updateScore(scoreUpdate);
 
         assertNotNull(matchResponse.getScore());
         assertNotNull(matchResponse.getScore().get(mexico));
@@ -659,7 +658,7 @@ class ScoreBoardTest {
                                                                       argThat(matchArg -> matchArg instanceof FootballMatch));
         footballMatch =
                 (FootballMatch) footballScoreBoard.updateFootballMatchScore(homeTeamScore, awayTeamScore,
-                                                                            footballMatch);
+                                                                            homeTeam.getName(), awayTeam.getName());
         addMatchToScoreBoard(original, footballMatch, footballScoreBoard);
     }
 
