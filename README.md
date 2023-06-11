@@ -1,5 +1,5 @@
 # Scoreboard
- Scoreboard library that shows all the ongoing matches and their scores
+ Scoreboard library that shows all the ongoing matches and their scores.
  This library uses gradle as build tool and ./gradlew clean build to build jar, add this library as dependency by 	
  {
   implementation files('{directory location}/lib/build/libs/lib-0.1.0.jar').
@@ -19,14 +19,14 @@
   The scoreboard supports the following operations:
   1. Start a new match (any game or Football), initialise score 0 – 0 and add it to the scoreboard, it has two implementations.
             
-            1. public Match createMatch(LinkedHashSet<String> teams) method: Start a new football match and passing in home and away                team name.            
-               A generic match (can be a football match, it will depend on game string passed to ScoreBoard constructor) can be                    created as follows,
+            1. public Match createMatch(LinkedHashSet<String> teams) method: Start a new football match and passing in home and away team name.            
+               A generic match (can be a football match, it will depend on game string passed to ScoreBoard constructor) can be created as follows,
                { 
                   LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of("SPAIN", "BRAZIL"));
                   scoreBoard.createMatch(teamNames); 
                }
                  
-            2. public Match createFootballMatch(String homeTeam, String awayTeam) method: Start a new match for other games                         and passing in teams names as LinkedHashSet.
+            2. public Match createFootballMatch(String homeTeam, String awayTeam) method: Start a new match for other games and passing in teams names as LinkedHashSet.
                A football match can be created as follows by passing in home team and away team name.
                { 
                  FootballMatch footballMatch = (FootballMatch) scoreBoard.createFootballMatch("MEXICO", "CANADA");
@@ -36,11 +36,11 @@
            
     2. Update score:It has two implementations one is generic and other as a convenience method for football
             
-            1. public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, String homeTeamName, String                      awayTeamName) method: Update a football match score and passing in home and away
+            1. public Match updateFootballMatchScore(Integer homeTeamScore, Integer awayTeamScore, String homeTeamName, String awayTeamName) method: Update a football match score and passing in home and away
                team goals(expecting zero or positive integer) and name, this method can be used only if scoreboard is
                based on Football game for other games use generic method mentioned next
                
-               Important:All teams in input should be belonging to SAME Match and all teams in match should be given in input, else                runtime exception is thrown
+               Important:All teams in input should be belonging to SAME Match and all teams in match should be given in input, else runtime exception is thrown
                This implementation finds Match object from scoreboard based on the team name in input and updates it.
                
                The input receives Integer homeTeamScore, Integer awayTeamScore, String homeTeamName,String awayTeamName
@@ -48,10 +48,10 @@
                   scoreBoard.updateFootballMatchScore(0,5,"MEXICO","CANADA");
                }
                 
-            2. public Match updateScore(Map<String, Object> score) method: Update a match (any game - football or any other                        game) score.
+            2. public Match updateScore(Map<String, Object> score) method: Update a match (any game - football or any other game) score.
                The input receives a Map of team names and an object representing score.
                
-               Important:All teams in input MAP should be belonging to SAME Match (Cannot update more than one match in same input)                and all teams in match should be given in input MAP, else runtime exception is thrown.
+               Important:All teams in input MAP should be belonging to SAME Match (Cannot update more than one match in same input) and all teams in match should be given in input MAP, else runtime exception is thrown.
                This implementation finds Match object from scoreboard based on the team name in input and updates it.
                               
                A match score can be updated as follows,
@@ -66,7 +66,7 @@
                
     3. Finish match currently in progress. This removes a match from the scoreboard, it has two implementations.
 
-            1. public void finishMatchByTeamName(String teamName) method removes a match from Scoreboard associated to this team                    name in input.
+            1. public void finishMatchByTeamName(String teamName) method removes a match from Scoreboard associated to this team name in input.
                The input receives String team name in match.
                {
                  scoreBoard.finishMatchByTeamName("SPAIN");
@@ -93,7 +93,7 @@
               4. Argentina 3 - Australia 1
               5. Germany 2 - France 2
             
-            2. getSummaryOfMatchObjects method Gets a List of Match objects which gives Summary of Matches, as described in order                  above.
+            2. getSummaryOfMatchObjects method Gets a List of Match objects which gives Summary of Matches, as described in order above.
                {
                  List<Match> list = scoreBoard.getSummaryOfMatchObjects();
                  System.out.println(list.stream().map(m->m.toString()).collect(Collectors.joining(",")));
@@ -110,7 +110,7 @@
     that game. 
     
     A factory pattern(MatchFactory class) for selecting Match interface implementation based on game type(string game name)
-    and a ScoringStrategy class takes as constructor param Score interface type, it picks the scoring strategy, using which             different scoring operation .
+    and a ScoringStrategy class takes as constructor param Score interface type, it picks the scoring strategy, using which different scoring operation .
     
     Currently, football and Rugby related Scoring strategy and Match class type is supported.
         1. By default, it supports football as it's game type.
