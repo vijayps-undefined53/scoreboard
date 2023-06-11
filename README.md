@@ -40,6 +40,9 @@
                team goals(expecting zero or positive integer) and name, this method can be used only if scoreboard is
                based on Football game for other games use generic method mentioned next
                
+               Important:All teams in input should be belonging to SAME Match and all teams in match should be given in input, else                runtime exception is thrown
+               This implementation finds Match object from scoreboard based on the team name in input and updates it.
+               
                The input receives Integer homeTeamScore, Integer awayTeamScore, String homeTeamName,String awayTeamName
                {
                   scoreBoard.updateFootballMatchScore(0,5,"MEXICO","CANADA");
@@ -47,8 +50,10 @@
                 
             2. public Match updateScore(Map<String, Object> score) method: Update a match (any game - football or any other                        game) score.
                The input receives a Map of team names and an object representing score.
-               The team names in map should have all teams in match and should be part of same match .
                
+               Important:All teams in input MAP should be belonging to SAME Match (Cannot update more than one match in same input)                and all teams in match should be given in input MAP, else runtime exception is thrown.
+               This implementation finds Match object from scoreboard based on the team name in input and updates it.
+                              
                A match score can be updated as follows,
                The input receives a Map of team names and an object representing score.
                The team names in map should have all teams in match and should be part of same match.
