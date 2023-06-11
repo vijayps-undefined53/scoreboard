@@ -49,7 +49,7 @@ public abstract class Match {
         StringBuilder response = new StringBuilder();
         if (score != null && !score.entrySet().isEmpty()) {
             for (Map.Entry<Teams, Object> entry : score.entrySet()) {
-                response.append(entry.getKey().getName()).append(" ").append(entry.getValue().toString());
+                response.append(entry.getKey().getName()).append(" ").append(entry.getValue().toString()).append(" ");
             }
         }
         return response.toString();

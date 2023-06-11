@@ -633,8 +633,9 @@ class ScoreBoardTest {
         assertEquals(summaryOfMatches, actual);
     }
 
-    private void updateScore(FootballMatch footballMatch, Integer homeTeamScore, Integer awayTeamScore, Teams homeTeam,
-                             Teams awayTeam)
+    private FootballMatch updateScore(FootballMatch footballMatch, Integer homeTeamScore, Integer awayTeamScore,
+                                      Teams homeTeam,
+                                      Teams awayTeam)
             throws
             NoSuchFieldException,
             IllegalAccessException {
@@ -660,6 +661,7 @@ class ScoreBoardTest {
                 (FootballMatch) footballScoreBoard.updateFootballMatchScore(homeTeamScore, awayTeamScore,
                                                                             homeTeam.getName(), awayTeam.getName());
         addMatchToScoreBoard(original, footballMatch, footballScoreBoard);
+        return footballMatch;
     }
 
     @Test
@@ -740,4 +742,58 @@ class ScoreBoardTest {
         assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
     }
 
+    @Test
+    void When_SummaryOfMatchObjects_Invoked_Should_Get_A_Summary_Of_Match_Objects_Order_By_Total_Score_And_Same_Total_Score_By_Recency()
+            throws
+            NoSuchFieldException,
+            IllegalAccessException {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        FootballMatch footballMatchMexicoCanada =
+                (FootballMatch) footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        footballMatchMexicoCanada.setHomeTeam(mexico);
+        footballMatchMexicoCanada.setAwayTeam(canada);
+        assertInstanceOf(Match.class, footballMatchMexicoCanada);
+        assertInstanceOf(FootballMatch.class, footballMatchMexicoCanada);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchMexicoCanada));
+        footballMatchMexicoCanada = updateScore(footballMatchMexicoCanada, 0, 5, mexico,
+                                                canada);
+
+
+        mockMatch(SPAIN, BRAZIL, spain, brazil);
+        Match footballMatchSpainBrazil = footballScoreBoard.createFootballMatch(SPAIN, BRAZIL);
+        assertInstanceOf(Match.class, footballMatchSpainBrazil);
+        assertInstanceOf(FootballMatch.class, footballMatchSpainBrazil);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchSpainBrazil));
+        footballMatchSpainBrazil = updateScore((FootballMatch) footballMatchSpainBrazil, 10, 2, spain, brazil);
+
+
+        mockMatch(GERMANY, FRANCE, germany, france);
+        Match footballMatchGermanyFrance = footballScoreBoard.createFootballMatch(GERMANY, FRANCE);
+        assertInstanceOf(Match.class, footballMatchGermanyFrance);
+        assertInstanceOf(FootballMatch.class, footballMatchGermanyFrance);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchGermanyFrance));
+        footballMatchGermanyFrance = updateScore((FootballMatch) footballMatchGermanyFrance, 2, 2, germany, france);
+
+        mockMatch(URUGUAY, ITALY, uruguay, italy);
+        Match footballMatchUruguayItaly = footballScoreBoard.createFootballMatch(URUGUAY, ITALY);
+        assertInstanceOf(Match.class, footballMatchUruguayItaly);
+        assertInstanceOf(FootballMatch.class, footballMatchUruguayItaly);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchUruguayItaly));
+        footballMatchUruguayItaly = updateScore((FootballMatch) footballMatchUruguayItaly, 6, 6, uruguay, italy);
+
+        mockMatch(ARGENTINA, AUSTRALIA, argentina, austrailia);
+        Match footballMatchArgentinaAustrailia = footballScoreBoard.createFootballMatch(ARGENTINA, AUSTRALIA);
+        assertInstanceOf(Match.class, footballMatchArgentinaAustrailia);
+        assertInstanceOf(FootballMatch.class, footballMatchArgentinaAustrailia);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatchArgentinaAustrailia));
+        footballMatchArgentinaAustrailia = updateScore((FootballMatch) footballMatchArgentinaAustrailia, 3, 1,
+                                                       argentina, austrailia);
+
+        List<Match> expectedSummaryOfMatchObjects = List.of(footballMatchUruguayItaly, footballMatchSpainBrazil,
+                                                            footballMatchMexicoCanada, footballMatchArgentinaAustrailia,
+                                                            footballMatchGermanyFrance);
+        List<Match> actualSummaryOfMatchObjects = footballScoreBoard.getSummaryOfMatchObjects();
+        assertNotNull(actualSummaryOfMatchObjects);
+        assertEquals(expectedSummaryOfMatchObjects, actualSummaryOfMatchObjects);
+    }
 }

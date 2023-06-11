@@ -169,7 +169,8 @@ public class ScoreBoard {
     public String getSummary() {
         if (!game.equals(FOOTBALL)) {
             throw new RuntimeException(
-                    "The pattern for summary of matches is compatible with only two player with zero or positive " +
+                    "The string pattern for summary of matches is compatible with only two player with zero or " +
+                            "positive " +
                             "integer " +
                             "score game like football, so this method is only supported for Football.");
         }
@@ -210,6 +211,21 @@ public class ScoreBoard {
 
     public List<Match> getMatches() {
         return this.matches;
+    }
+
+    /*
+        This is another method to get summary of matches as list of match objects.
+ */
+    public List<Match> getSummaryOfMatchObjects() {
+        Comparator<Match> byScore =
+                (match, match1) -> match.getScore().values().stream().map(v -> (Integer) v).reduce(0,
+                                                                                                   Integer::sum).compareTo(
+                        match1.getScore().values().stream().map(v -> (Integer) v).reduce(0,
+                                                                                         Integer::sum));
+        List<Match> getSummaryOfMatchesList = new ArrayList<>(getMatches());
+        getSummaryOfMatchesList.sort(byScore);
+        Collections.reverse(getSummaryOfMatchesList);
+        return getSummaryOfMatchesList;
     }
 
     public void finishMatchByTeamName(String teamName) {
