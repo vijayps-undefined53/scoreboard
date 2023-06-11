@@ -628,7 +628,7 @@ class ScoreBoardTest {
                 "3. MEXICO 0 - CANADA 5\n" +
                 "4. GERMANY 2 - FRANCE 2\n" +
                 "5. ARGENTINA 3 - AUSTRALIA 1";
-        String actual = footballScoreBoard.getSummaryOfMatches();
+        String actual = footballScoreBoard.getSummary();
         assertNotNull(actual);
         assertEquals(summaryOfMatches, actual);
     }
@@ -713,9 +713,31 @@ class ScoreBoardTest {
                 "3. MEXICO 0 - CANADA 5\n" +
                 "4. ARGENTINA 3 - AUSTRALIA 1\n" +
                 "5. GERMANY 2 - FRANCE 2";
-        String actual = footballScoreBoard.getSummaryOfMatches();
+        String actual = footballScoreBoard.getSummary();
         assertNotNull(actual);
         assertEquals(summaryOfMatches, actual);
+    }
+
+    //Add a convenience method to finish a match by providing a team name, the match in progress for that team will
+    // be finished
+    @Test
+    void When_FinishMatchByTeamName_Invoked_Should_Remove_Match_From_ScoreBoard() {
+        mockMatch(MEXICO, CANADA, mexico, canada);
+        Match footballMatch = footballScoreBoard.createFootballMatch(MEXICO, CANADA);
+        assertInstanceOf(Match.class, footballMatch);
+        assertInstanceOf(FootballMatch.class, footballMatch);
+        assertTrue(footballScoreBoard.getMatches().contains(footballMatch));
+        footballScoreBoard.finishMatchByTeamName(MEXICO);
+        assertFalse(footballScoreBoard.getMatches().contains(footballMatch));
+
+        mockRugbyMatch(SPAIN, BRAZIL, spain, brazil);
+        LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(SPAIN, BRAZIL));
+        RugbyMatch rugbyScoreBoardMatch = (RugbyMatch) rugbyScoreBoard.createMatch(teamNames);
+        assertNotNull(rugbyScoreBoardMatch);
+        assertInstanceOf(Match.class, rugbyScoreBoardMatch);
+        assertTrue(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
+        rugbyScoreBoard.finishMatchByTeamName(BRAZIL);
+        assertFalse(rugbyScoreBoard.getMatches().contains(rugbyScoreBoardMatch));
     }
 
 }

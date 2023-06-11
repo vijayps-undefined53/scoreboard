@@ -101,7 +101,8 @@ public class ScoreBoard {
             if (optionalMatch.isPresent()) {
                 return optionalMatch.get();
             } else {
-                throw new RuntimeException("Found no Match associated to this score board, with given teams");
+                throw new RuntimeException("Found no Match associated to this score board, with given teams, all " +
+                                                   "teams in input should be belonging to same match");
             }
         }
         throw new RuntimeException("No matches in progress in this scoreboard");
@@ -165,7 +166,7 @@ public class ScoreBoard {
     football,
     so this method is only supported for Football.
      */
-    public String getSummaryOfMatches() {
+    public String getSummary() {
         if (!game.equals(FOOTBALL)) {
             throw new RuntimeException(
                     "The pattern for summary of matches is compatible with only two player with zero or positive " +
@@ -209,5 +210,9 @@ public class ScoreBoard {
 
     public List<Match> getMatches() {
         return this.matches;
+    }
+
+    public void finishMatchByTeamName(String mexico) {
+        // TO DO
     }
 }
