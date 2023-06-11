@@ -174,7 +174,7 @@ public class ScoreBoard {
         scoreBoard.updateScore(score);
      */
     public Match updateScore(Map<String, Object> score) {
-        Match match = getMatchBasedOnTeamName(score.keySet());
+        Match match = getMatchBasedOnTeamName(score.keySet(), true);
         Map<String, Teams> teamInMatch =
                 findTeamsObjectInMatchBasedOnTeamNames(new LinkedHashSet<>(score.keySet()), match);
         if (teamInMatch == null || !(teamInMatch.size() == score.keySet().size())) {
@@ -216,7 +216,7 @@ public class ScoreBoard {
             throw new RuntimeException("Home Team and Away Team cannot be null for a football match");
         }
         LinkedHashSet<String> teamsNames = new LinkedHashSet<>(Set.of(homeTeamName, awayTeamName));
-        FootballMatch footballMatch = (FootballMatch) getMatchBasedOnTeamName(teamsNames);
+        FootballMatch footballMatch = (FootballMatch) getMatchBasedOnTeamName(teamsNames, true);
         if (!this.matches.contains(footballMatch)) {
             throw new RuntimeException("Match not associated to this score board");
         }
@@ -240,7 +240,7 @@ public class ScoreBoard {
        scoreBoard.finishMatchByTeamName("MEXICO");
     */
     public void finishMatchByTeamName(String teamName) {
-        Match match = getMatchBasedOnTeamName(Set.of(teamName));
+        Match match = getMatchBasedOnTeamName(Set.of(teamName), false);
         if (!this.matches.contains(match)) {
             throw new RuntimeException("Match not associated to this score board");
         }
@@ -266,16 +266,25 @@ public class ScoreBoard {
         return this.matches.remove(match);
     }
 
-    private Match getMatchBasedOnTeamName(Set<String> teams) {
+    private Match getMatchBasedOnTeamName(Set<String> teams, boolean compareSize) {
         if (!matches.isEmpty()) {
             Optional<Match> optionalMatch = this.matches.stream().filter(match -> {
                 Set<Teams> teamsInMatch = match.getScore().keySet();
                 Set<String> teamsNamesInMatch = teamsInMatch.stream().map(Teams::getName).collect(Collectors.toSet());
-                return teamsNamesInMatch.size() == teams.size() && teamsNamesInMatch.containsAll(teams);
+                if (compareSize) {
+                    return teamsNamesInMatch.size() == teams.size() && teamsNamesInMatch.containsAll(teams);
+                } else {
+                    return teamsNamesInMatch.containsAll(teams);
+                }
             }).findAny();
             if (optionalMatch.isPresent()) {
                 return optionalMatch.get();
             } else {
+                if (compareSize) {
+                    throw new RuntimeException("Found no Match associated to this score board, with given teams, all " +
+                                                       "teams in input should be belonging to same match and all " +
+                                                       "teams in match should be given in input");
+                }
                 throw new RuntimeException("Found no Match associated to this score board, with given teams, all " +
                                                    "teams in input should be belonging to same match");
             }
