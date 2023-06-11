@@ -404,6 +404,12 @@ class ScoreBoardTest {
     }
 
     @Test
+    void When_CreateFootballMatch_Invoked_With_Same_Team_Name_For_Home_And_Away_Should_Throw_RuntimeException() {
+        assertThrows(RuntimeException.class, () -> scoreBoard.createFootballMatch(MEXICO, MEXICO),
+                     "Team names in a match should be unique");
+    }
+
+    @Test
     void When_CreateScore_Invoked_With_Team_Already_Playing_A_Match_Should_Throw_Validation_Exception() {
         mockMatch(MEXICO, CANADA, mexico, canada);
         LinkedHashSet<String> teamNames = new LinkedHashSet<>(Set.of(MEXICO, CANADA));

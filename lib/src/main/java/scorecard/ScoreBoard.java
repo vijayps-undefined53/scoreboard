@@ -115,6 +115,9 @@ public class ScoreBoard {
             throw new RuntimeException("Scoreboard should have game type football, this method can only be used to " +
                                                "create football match, use generic createMatch for other games");
         }
+        if (homeTeam.equals(awayTeam)) {
+            throw new RuntimeException("Team names in a match should be unique");
+        }
         LinkedHashSet<String> teams = new LinkedHashSet<>(Set.of(homeTeam, awayTeam));
         validationsCreatingMatch(teams);
         FootballMatch match = (FootballMatch) scoreBoardService.createMatch(FOOTBALL, teams, this);
